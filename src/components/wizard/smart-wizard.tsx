@@ -14,6 +14,9 @@ import {
 } from "@/lib/document-types";
 import { buildWizardDocument, wizardQuestions } from "@/lib/wizard";
 import { categoryForDocument, trackEvent } from "@/lib/analytics/service";
+import { useRepositories } from "@/lib/data/use-local-data";
+import { useLocalSession } from "@/components/session/local-session-provider";
+import type { SavedDocument } from "@/lib/data/models";
 
 export function SmartWizard({
   initialType,
@@ -30,6 +33,9 @@ export function SmartWizard({
   const [previewOpen, setPreviewOpen] = useState(false);
   const [complete, setComplete] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [savedDocumentId, setSavedDocumentId] = useState<string | null>(null);
+  const repositories = useRepositories();
+  const { user } = useLocalSession();
   const activeRef = useRef(false);
   const completedRef = useRef(false);
   const trackedTypeRef = useRef<DocumentType | null>(initialType);
@@ -49,22 +55,19 @@ export function SmartWizard({
     trackEvent("document_type_viewed", metadata);
     trackEvent("document_started", metadata);
   }, [initialType]);
+  useEffect(() => {
+    if (!repositories || !type || Object.keys(answers).length) return;
+    const company = repositories.companies.getByUser(user.id);
+    if (!company) return;
+    const defaults: Record<string, string> = { company: company.companyName, companyTaxId: company.taxNumber };
+    const timer = window.setTimeout(() => setAnswers(defaults), 0);
+    return () => window.clearTimeout(timer);
+  }, [answers, repositories, type, user.id]);
   useEffect(() => () => {
     const trackedType = trackedTypeRef.current;
     if (activeRef.current && !completedRef.current && trackedType) trackEvent("document_abandoned", { document_type: trackedType, document_category: categoryForDocument(trackedType), language: "hr", duration_seconds: (performance.now() - startedAtRef.current) / 1000 });
   }, []);
 
-  useEffect(() => {
-    if (!type || !Object.keys(answers).length) return;
-    const timer = window.setTimeout(() => {
-      localStorage.setItem(
-        `dokument-ai-wizard-${type}`,
-        JSON.stringify({ prompt, answers, step }),
-      );
-      setSaved(true);
-    }, 400);
-    return () => window.clearTimeout(timer);
-  }, [answers, prompt, step, type]);
   useEffect(() => {
     function keyboard(event: KeyboardEvent) {
       if (event.key === "Escape" && previewOpen) setPreviewOpen(false);
@@ -96,6 +99,7 @@ export function SmartWizard({
     setAnswers({});
     setComplete(false);
     setError("");
+    setSavedDocumentId(null);
     window.history.pushState(null, "", "/wizard");
   }
   function next() {
@@ -114,6 +118,14 @@ export function SmartWizard({
       trackEvent("document_completed", { document_type: type, document_category: categoryForDocument(type), language: "hr", current_step: questions.length, total_steps: questions.length, duration_seconds: (performance.now() - startedAtRef.current) / 1000 });
       setPreviewOpen(true);
     } else setStep((value) => value + 1);
+  }
+  function saveLocally() {
+    if (!repositories || !document) return;
+    const timestamp = new Date().toISOString();
+    const company = repositories.companies.getByUser(user.id);
+    const record: SavedDocument = { id: savedDocumentId ?? "", userId: user.id, companyId: company?.id ?? null, contactId: null, documentType: document.type, documentCategory: categoryForDocument(document.type), title: document.title, documentNumber: `LOCAL-${timestamp.slice(0,10).replaceAll("-","")}`, status: complete ? "completed" : "draft", language: document.locale, currency: "EUR", subtotal: document.totals?.subtotal ?? 0, taxAmount: document.totals?.tax ?? 0, total: document.totals?.total ?? 0, formData: {}, content: document, createdAt: timestamp, updatedAt: timestamp, lastOpenedAt: timestamp };
+    const result = repositories.documents.save(record); setSavedDocumentId(result.id); setSaved(true);
+    trackEvent("document_saved", { document_type: document.type, document_category: categoryForDocument(document.type), language: document.locale });
   }
   if (!type || !document)
     return <WizardStart initialPrompt={prompt} onStart={start} />;
@@ -186,10 +198,13 @@ export function SmartWizard({
                     <Button onClick={() => setPreviewOpen(true)}>
                       <FileText className="size-4" /> Otvori dokument
                     </Button>
+                    <Button onClick={saveLocally} variant="outline">
+                      {savedDocumentId ? "Dokument spremljen" : "Spremi dokument"}
+                    </Button>
                   </div>
                 </div>
               ) : (
-                <WizardStep
+                <><WizardStep
                   question={question}
                   value={answers[question.id] ?? ""}
                   error={error}
@@ -205,7 +220,7 @@ export function SmartWizard({
                   }}
                   onBack={() => setStep((value) => Math.max(0, value - 1))}
                   onNext={next}
-                />
+                />{repositories && ["buyer","recipient","partyTwo","supplier"].includes(question.id) && repositories.contacts.list(user.id).length > 0 && <div className="mt-4 border-t pt-4"><label className="mb-2 block text-xs font-semibold text-muted-foreground">Odaberi iz lokalnih kontakata</label><select onChange={(event) => { const contact = repositories.contacts.get(event.target.value); if (contact) setAnswers((current) => ({...current,[question.id]:contact.companyName})); }} className="h-10 w-full rounded-xl border bg-background px-3 text-sm"><option value="">Odaberite kontakt…</option>{repositories.contacts.list(user.id).map((contact) => <option key={contact.id} value={contact.id}>{contact.companyName}</option>)}</select></div>}</>
               )}
             </div>
             <p className="mt-5 text-center text-xs text-muted-foreground">

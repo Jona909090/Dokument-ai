@@ -1,31 +1,51 @@
 # Dokument AI
 
-Profesionalna SaaS aplikacija za pripremu poslovnih i osobnih dokumenata, izgrađena s Next.js App Routerom.
+Dokument AI je Next.js SaaS sučelje za izradu, pregled, lokalno spremanje i izvoz poslovnih i osobnih dokumenata. Trenutačna razvojna faza radi potpuno lokalno i ne zahtijeva korisnički račun ni vanjski backend.
 
-Projekt sadrži javnu početnu stranicu, lokalni generator i izvoz dokumenata te Supabase autentikaciju i privatni korisnički dashboard.
+## Trenutačne funkcionalnosti
 
-## Funkcionalnosti
+- lokalna demo sesija s izmišljenim korisnikom
+- dashboard sa statistikom, nedavnim i najčešće korištenim dokumentima
+- pet početnih demo dokumenata
+- popis dokumenata s pretragom, filtrima i sortiranjem
+- otvaranje, uređivanje, dupliciranje, arhiviranje i brisanje
+- lokalni autosave s prikazom stanja spremanja
+- PDF i Word (`.docx`) izvoz
+- profil firme s logotipom, potpisom i pečatom
+- lokalni adresar kontakata i automatsko popunjavanje podataka dokumenta
+- Smart Document Wizard i profesionalni A4 pregled uživo
+- privacy-first lokalna analitika bez sadržaja dokumenata
+- svijetla i tamna tema te responsive korisničko sučelje
 
-- registracija, prijava, potvrda emaila, reset lozinke i profil korisnika
-- deset vrsta dokumenata s profesionalnim A4 pregledom
-- lokalni PDF i Word (`.docx`) izvoz s Unicode podrškom
-- privatno spremanje, ponovno otvaranje, uređivanje i brisanje dokumenata
-- pretraga i sortiranje dokumenata po datumu i tipu
-- premium dashboard sa statistikom, omiljenim i najčešće korištenim dokumentima
-- trostupčani editor s live A4 pregledom, lokalnim autosaveom i undo/redo poviješću
-- Command Palette (`Ctrl/Cmd + K`), globalna pretraga, obavijesti i tipkovnički prečaci
-- svijetla i tamna tema, skeleton/loading stanja te responsive SaaS navigacija
-- lokalni Smart Document Wizard s parserom ključnih riječi, quick templates grupama, pitanjima korak po korak, progress barom i smart validacijom
-- privacy-first analitička infrastruktura s centralnim `trackEvent` servisom, lokalnim adapterom i demo administratorskim dashboardom na `/analytics`
-- PostgreSQL Row Level Security: svaki korisnik pristupa isključivo svojim podacima
+## Lokalna arhitektura podataka
 
-## Tehnologije
+Domenski modeli nalaze se u `src/lib/data/models.ts`, a sva spremanja prolaze kroz strogo tipizirana repository sučelja iz `src/lib/data/repositories.ts`. Aktivni adapter definiran je u `src/lib/data/config.ts` i trenutačno koristi centralni lokalni adapter nad `localStorage` spremištem.
 
-- Next.js App Router, React i TypeScript
-- Tailwind CSS, shadcn/ui i Lucide Icons
-- Supabase Auth, PostgreSQL i `@supabase/ssr`
-- pdfmake i docx
-- ESLint i npm
+UI komponente ne pristupaju izravno spremištu dokumenata. Zbog toga će se lokalni adapter kasnije moći zamijeniti Supabase adapterom bez promjene dashboarda, popisa dokumenata, editora, firme ili kontakata.
+
+Podaci ove demo faze postoje samo u trenutačnom pregledniku i nisu prikladni za produkcijsko spremanje osjetljivih podataka. Opcija **Obriši demo podatke** na dashboardu uklanja lokalnog korisnika, firmu, kontakte i dokumente.
+
+## Budući Supabase prijelaz
+
+Supabase nije aktivno povezan u ovoj fazi. Budući adapter treba implementirati postojeća repository sučelja i zatim zamijeniti `activeDataAdapter` konfiguraciju. Neaktivna referentna PostgreSQL shema nalazi se u `supabase/schema/saas_data_model.sql` i sadrži tablice:
+
+- `profiles`
+- `companies`
+- `contacts`
+- `documents`
+- `document_items`
+- `document_exports`
+
+Shema uključuje primarne i vanjske ključeve, vremenske oznake, indekse i nacrt RLS pravila. Datoteka nije migracija i ne izvršava se automatski.
+
+Za buduću produkcijsku integraciju bit će potrebne najmanje ove varijable:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+```
+
+U ovoj lokalnoj fazi nisu potrebne varijable okruženja. OpenAI, Stripe i ostali vanjski servisi nisu povezani.
 
 ## Lokalno pokretanje
 
@@ -33,54 +53,29 @@ Potrebni su Node.js 20.9 ili noviji i npm.
 
 ```bash
 npm install
-copy .env.example .env.local
 npm run dev
 ```
 
-Aplikacija će biti dostupna na [http://localhost:3000](http://localhost:3000). Na macOS-u ili Linuxu umjesto `copy` koristite `cp`.
+Aplikacija je dostupna na [http://localhost:3000](http://localhost:3000).
 
-## Supabase postavljanje
-
-1. Kreirajte Supabase projekt.
-2. Kopirajte `.env.example` u `.env.local` i unesite Project URL i Publishable key.
-3. U Supabase SQL Editoru redom izvršite migracije iz `supabase/migrations/` ili ih primijenite Supabase CLI naredbom `supabase db push`.
-4. U Authentication > URL Configuration postavite Site URL te dopustite `http://localhost:3000/auth/callback` i odgovarajući produkcijski URL.
-5. Za produkcijsku potvrdu emaila i reset lozinke konfigurirajte SMTP u Supabase projektu.
-
-Migracija stvara tablice `profiles` i `documents`, indekse, `updated_at` triggere, profil pri registraciji te RLS pravila za privatne podatke korisnika. Service-role ključ nije potreban niti se smije izlagati klijentu.
-
-## Naredbe
+## Provjere
 
 ```bash
-npm run dev
 npm run test
 npm run lint
 npm run build
-npm run start
 ```
 
-## Struktura
+## Glavne rute
 
-```text
-src/
-├── app/              # App Router, auth, dashboard i callback rute
-├── components/
-│   ├── auth/         # autentikacijski UI
-│   ├── dashboard/    # navigacija i uređivanje dokumenata
-│   ├── generator/    # obrasci, pregled i izvoz
-│   ├── landing/      # sekcije početne stranice
-│   ├── layout/       # header i footer
-│   └── ui/           # shadcn/ui komponente
-└── lib/              # zajedničke funkcije i Supabase klijenti
-supabase/migrations/  # PostgreSQL migracije i RLS pravila
-```
+- `/dashboard` — lokalni SaaS pregled
+- `/documents` — upravljanje dokumentima
+- `/documents/[id]` — uređivanje i autosave
+- `/company` — podaci firme
+- `/contacts` — adresar klijenata
+- `/wizard` — vođena izrada dokumenta
+- `/analytics` — lokalni demo analytics dashboard
 
-Stripe i OpenAI nisu implementirani u ovoj fazi. Projekt je spreman za deployment na Vercel nakon unosa varijabli okruženja i produkcijskih Auth URL-ova.
+## Tehnologije
 
-## Lokalna AI arhitektura
-
-Ruta `/wizard` ne koristi OpenAI, Supabase ni Stripe. `src/lib/wizard.ts` sadrži deklarativna pitanja i pretvaranje odgovora u zajednički format dokumenta, dok `src/lib/document-types.ts` lokalno prepoznaje vrstu dokumenta pomoću ključnih riječi. Buduća AI integracija može zamijeniti parser ili predlaganje odgovora bez promjene wizard UI-ja i sustava izvoza.
-
-## Analitika korištenja
-
-`src/lib/analytics/` sadrži strogo tipizirane događaje, centralni servis, zamjenjivi adapter, demo podatke i izračun metrika. Lokalni adapter sprema najviše 1000 privacy-safe događaja u `localStorage`; ne koristi cookies niti šalje podatke vanjskim servisima. Promptovi, odgovori, sadržaj dokumenta, imena, adrese, iznosi, porezni brojevi i email adrese nisu dio Analytics API-ja. Buduća, trenutno neaktivna SQL shema nalazi se u `supabase/schema/analytics_events.sql`.
+Next.js App Router, React, TypeScript, Tailwind CSS, shadcn/ui, Lucide Icons, pdfmake, docx, Vitest, ESLint i npm.

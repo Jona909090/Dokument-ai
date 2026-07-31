@@ -2,21 +2,23 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { Download, FileText, Loader2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { saveGeneratedDocument, updateGeneratedDocument } from "@/app/dashboard/actions";
 import { downloadDocx, downloadPdf } from "@/lib/document-export";
 import { formatDocumentDate, type GeneratedDocument } from "@/lib/generated-document";
 import { categoryForDocument, trackEvent } from "@/lib/analytics/service";
+import { useRepositories } from "@/lib/data/use-local-data";
+import { useLocalSession } from "@/components/session/local-session-provider";
+import type { SavedDocument } from "@/lib/data/models";
 
 const euro = new Intl.NumberFormat("hr-HR", { style: "currency", currency: "EUR" });
 
 type DocumentPreviewProps = { document: GeneratedDocument; documentId?: string; onClose: () => void; allowSave?: boolean };
 
 export function DocumentPreview({ document, documentId, onClose, allowSave = true }: DocumentPreviewProps) {
-  const router = useRouter();
+  const repositories = useRepositories();
+  const { user } = useLocalSession();
   const [downloading, setDownloading] = useState<"pdf" | "docx" | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
@@ -34,11 +36,13 @@ export function DocumentPreview({ document, documentId, onClose, allowSave = tru
 
   async function handleSave() {
     setSaving(true); setSaveMessage("");
-    const result = documentId ? await updateGeneratedDocument(documentId, document) : await saveGeneratedDocument(document);
+    if (!repositories) { setSaving(false); setSaveMessage("Lokalna pohrana nije dostupna."); return; }
+    const existing = documentId ? repositories.documents.get(documentId) : null; const timestamp = new Date().toISOString(); const company = repositories.companies.getByUser(user.id);
+    const record: SavedDocument = { id: existing?.id ?? "", userId: user.id, companyId: company?.id ?? null, contactId: existing?.contactId ?? null, documentType: document.type, documentCategory: categoryForDocument(document.type), title: document.title, documentNumber: existing?.documentNumber ?? `LOCAL-${timestamp.slice(0,10).replaceAll("-","")}`, status: existing?.status ?? "draft", language: document.locale, currency: "EUR", subtotal: document.totals?.subtotal ?? 0, taxAmount: document.totals?.tax ?? 0, total: document.totals?.total ?? 0, formData: {}, content: document, createdAt: existing?.createdAt ?? timestamp, updatedAt: timestamp, lastOpenedAt: timestamp };
+    const result = repositories.documents.save(record);
     setSaving(false);
-    if (result.error) { setSaveMessage(result.error); return; }
     trackEvent("document_saved", { document_type: document.type, document_category: categoryForDocument(document.type), language: document.locale });
-    router.push(`/dashboard/documents/${result.id}`);
+    setSaveMessage(`Spremljeno lokalno. ID: ${result.id.slice(0, 8)}`);
   }
 
   return (

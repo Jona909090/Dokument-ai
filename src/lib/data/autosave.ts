@@ -1,0 +1,1 @@
+export function createDebouncedSave<T>(save: (value: T) => void, delay = 900) { let timer: ReturnType<typeof setTimeout> | null = null; return { schedule(value: T) { if (timer) clearTimeout(timer); timer = setTimeout(() => { timer = null; save(value); }, Math.max(800,delay)); }, cancel() { if (timer) clearTimeout(timer); timer = null; } }; }

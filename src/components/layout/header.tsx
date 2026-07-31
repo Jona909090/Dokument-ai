@@ -42,8 +42,8 @@ export function Header() {
               {item.label}
             </Link>
           ))}
-          <Link href="/login" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "ml-2")}>Prijava</Link>
-          <Link href="/register" className={cn(buttonVariants({ size: "sm" }), "ml-1")}>Besplatno isprobaj</Link>
+          <Link href="/dashboard" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "ml-2")}>Demo dashboard</Link>
+          <Link href="/wizard" className={cn(buttonVariants({ size: "sm" }), "ml-1")}>Novi dokument</Link>
         </nav>
 
         <button
@@ -67,8 +67,8 @@ export function Header() {
               </Link>
             ))}
             <div className="mt-3 grid grid-cols-2 gap-3 border-t pt-4">
-              <Link href="/login" onClick={() => setIsOpen(false)} className={buttonVariants({ variant: "outline" })}>Prijava</Link>
-              <Link href="/register" onClick={() => setIsOpen(false)} className={buttonVariants()}>Besplatno isprobaj</Link>
+              <Link href="/dashboard" onClick={() => setIsOpen(false)} className={buttonVariants({ variant: "outline" })}>Demo dashboard</Link>
+              <Link href="/wizard" onClick={() => setIsOpen(false)} className={buttonVariants()}>Novi dokument</Link>
             </div>
           </div>
         </nav>
