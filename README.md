@@ -8,7 +8,9 @@ Projekt trenutačno sadrži javnu početnu stranicu i lokalnu prvu verziju gener
 
 Unos na početnoj stranici lokalno prepoznaje deset kategorija: CV, fakturu, ponudu, ugovor, zahtjev ili molbu, otkaz, narudžbenicu, zapisnik, potvrdu i poslovno pismo.
 
-Faktura i ponuda podržavaju proizvoljan broj stavki, količine i cijene te automatski izračun osnovice, PDV-a i ukupnog iznosa. Podaci uneseni u obrasce trenutačno se ne šalju na poslužitelj niti se trajno spremaju.
+Faktura i ponuda podržavaju proizvoljan broj stavki, količine i cijene te automatski izračun osnovice, PDV-a i ukupnog iznosa. Moguće je dodati logotip, potpis i pečat.
+
+Svih deset kategorija imaju profesionalan A4 pregled te lokalno generiranje i preuzimanje PDF i Word (`.docx`) datoteka. Izvoz uključuje margine, zaglavlje, podnožje, numeraciju stranica, automatske prijelome, Unicode tekst te hrvatski ili engleski format datuma. Podaci uneseni u obrasce ne šalju se na poslužitelj niti se trajno spremaju.
 
 ## Tehnologije
 

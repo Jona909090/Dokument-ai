@@ -1,76 +1,94 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CheckCircle2, Plus, Trash2 } from "lucide-react";
+import { ImagePlus, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { DocumentType } from "@/lib/document-types";
+import { documentTypeDefinitions, type DocumentType } from "@/lib/document-types";
+import type { DocumentLocale, GeneratedDocument, GeneratedImages } from "@/lib/generated-document";
 
 type LineItem = { id: number; description: string; quantity: number; price: number };
 
 const currencyFormatter = new Intl.NumberFormat("hr-HR", { style: "currency", currency: "EUR" });
 
-type CommerceFormProps = { type: Extract<DocumentType, "invoice" | "offer"> };
+type CommerceFormProps = {
+  type: Extract<DocumentType, "invoice" | "offer">;
+  locale: DocumentLocale;
+  onPreview: (document: GeneratedDocument) => void;
+};
 
 function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return <label htmlFor={htmlFor} className="mb-2 block text-sm font-semibold text-slate-800">{children}</label>;
 }
 
-export function CommerceForm({ type }: CommerceFormProps) {
+export function CommerceForm({ type, locale, onPreview }: CommerceFormProps) {
   const label = type === "invoice" ? "fakture" : "ponude";
   const [items, setItems] = useState<LineItem[]>([{ id: 1, description: "", quantity: 1, price: 0 }]);
   const [taxRate, setTaxRate] = useState(25);
   const [nextId, setNextId] = useState(2);
-  const [isReady, setIsReady] = useState(false);
+  const [images, setImages] = useState<GeneratedImages>({});
 
   const totals = useMemo(() => {
     const subtotal = items.reduce((sum, item) => sum + Math.max(0, item.quantity) * Math.max(0, item.price), 0);
     const tax = subtotal * Math.max(0, taxRate) / 100;
-    return { subtotal, tax, total: subtotal + tax };
+    return { subtotal, taxRate, tax, total: subtotal + tax };
   }, [items, taxRate]);
 
   function updateItem(id: number, changes: Partial<LineItem>) {
     setItems((current) => current.map((item) => item.id === id ? { ...item, ...changes } : item));
-    setIsReady(false);
   }
 
   function addItem() {
     setItems((current) => [...current, { id: nextId, description: "", quantity: 1, price: 0 }]);
     setNextId((current) => current + 1);
-    setIsReady(false);
   }
 
   function removeItem(id: number) {
     setItems((current) => current.length === 1 ? current : current.filter((item) => item.id !== id));
-    setIsReady(false);
+  }
+
+  function loadImage(key: keyof GeneratedImages, file: File | undefined) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setImages((current) => ({ ...current, [key]: String(reader.result) }));
+    reader.readAsDataURL(file);
   }
 
   return (
-    <form onSubmit={(event) => { event.preventDefault(); setIsReady(true); }} className="space-y-8">
+    <form onSubmit={(event) => {
+      event.preventDefault();
+      const form = new FormData(event.currentTarget);
+      const fields = [
+        ["Naziv firme", "companyName"], ["OIB / porezni broj", "companyTaxId"], ["Adresa firme", "companyAddress"],
+        ["Kupac", "buyerName"], ["OIB / porezni broj kupca", "buyerTaxId"], ["Adresa kupca", "buyerAddress"],
+        [`Broj ${label}`, "documentNumber"], ["Datum", "documentDate"],
+      ].map(([fieldLabel, name]) => ({ label: fieldLabel, value: String(form.get(name) ?? ""), type: name === "documentDate" ? "date" as const : undefined }));
+      onPreview({ type, title: documentTypeDefinitions[type].label, locale, fields, items: items.map((item) => ({ ...item, amount: item.quantity * item.price })), totals, images });
+    }} className="space-y-8">
       <section>
         <h2 className="text-lg font-semibold text-slate-950">Podaci izdavatelja</h2>
         <div className="mt-5 grid gap-5 sm:grid-cols-2">
-          <div><FieldLabel htmlFor="company-name">Naziv firme *</FieldLabel><Input id="company-name" required placeholder="Naziv firme" /></div>
-          <div><FieldLabel htmlFor="company-tax-id">OIB / porezni broj *</FieldLabel><Input id="company-tax-id" required placeholder="Porezni identifikator" /></div>
-          <div className="sm:col-span-2"><FieldLabel htmlFor="company-address">Adresa firme *</FieldLabel><Input id="company-address" required placeholder="Ulica, broj, poštanski broj i grad" /></div>
+          <div><FieldLabel htmlFor="company-name">Naziv firme *</FieldLabel><Input id="company-name" name="companyName" required placeholder="Naziv firme" /></div>
+          <div><FieldLabel htmlFor="company-tax-id">OIB / porezni broj *</FieldLabel><Input id="company-tax-id" name="companyTaxId" required placeholder="Porezni identifikator" /></div>
+          <div className="sm:col-span-2"><FieldLabel htmlFor="company-address">Adresa firme *</FieldLabel><Input id="company-address" name="companyAddress" required placeholder="Ulica, broj, poštanski broj i grad" /></div>
         </div>
       </section>
 
       <section className="border-t pt-7">
         <h2 className="text-lg font-semibold text-slate-950">Podaci kupca</h2>
         <div className="mt-5 grid gap-5 sm:grid-cols-2">
-          <div><FieldLabel htmlFor="buyer-name">Naziv / ime kupca *</FieldLabel><Input id="buyer-name" required /></div>
-          <div><FieldLabel htmlFor="buyer-tax-id">OIB / porezni broj kupca</FieldLabel><Input id="buyer-tax-id" /></div>
-          <div className="sm:col-span-2"><FieldLabel htmlFor="buyer-address">Adresa kupca *</FieldLabel><Input id="buyer-address" required /></div>
+          <div><FieldLabel htmlFor="buyer-name">Naziv / ime kupca *</FieldLabel><Input id="buyer-name" name="buyerName" required /></div>
+          <div><FieldLabel htmlFor="buyer-tax-id">OIB / porezni broj kupca</FieldLabel><Input id="buyer-tax-id" name="buyerTaxId" /></div>
+          <div className="sm:col-span-2"><FieldLabel htmlFor="buyer-address">Adresa kupca *</FieldLabel><Input id="buyer-address" name="buyerAddress" required /></div>
         </div>
       </section>
 
       <section className="border-t pt-7">
         <h2 className="text-lg font-semibold text-slate-950">Podaci dokumenta</h2>
         <div className="mt-5 grid gap-5 sm:grid-cols-2">
-          <div><FieldLabel htmlFor="document-number">Broj {label} *</FieldLabel><Input id="document-number" required placeholder={type === "invoice" ? "npr. 2026-001" : "npr. P-2026-001"} /></div>
-          <div><FieldLabel htmlFor="document-date">Datum *</FieldLabel><Input id="document-date" type="date" required /></div>
+          <div><FieldLabel htmlFor="document-number">Broj {label} *</FieldLabel><Input id="document-number" name="documentNumber" required placeholder={type === "invoice" ? "npr. 2026-001" : "npr. P-2026-001"} /></div>
+          <div><FieldLabel htmlFor="document-date">Datum *</FieldLabel><Input id="document-date" name="documentDate" type="date" required /></div>
         </div>
       </section>
 
@@ -97,7 +115,7 @@ export function CommerceForm({ type }: CommerceFormProps) {
       <section className="ml-auto max-w-md rounded-2xl border border-blue-100 bg-blue-50/60 p-5">
         <div className="flex items-center justify-between gap-4 border-b border-blue-100 pb-4">
           <FieldLabel htmlFor="tax-rate">PDV %</FieldLabel>
-          <Input id="tax-rate" type="number" min="0" step="0.01" value={taxRate} onChange={(event) => { setTaxRate(Number(event.target.value)); setIsReady(false); }} className="w-28 bg-white text-right" />
+          <Input id="tax-rate" type="number" min="0" step="0.01" value={taxRate} onChange={(event) => setTaxRate(Number(event.target.value))} className="w-28 bg-white text-right" />
         </div>
         <dl className="mt-4 space-y-3 text-sm">
           <div className="flex justify-between gap-4"><dt className="text-slate-600">Ukupno bez PDV-a</dt><dd className="font-semibold">{currencyFormatter.format(totals.subtotal)}</dd></div>
@@ -106,11 +124,22 @@ export function CommerceForm({ type }: CommerceFormProps) {
         </dl>
       </section>
 
+      <section className="border-t pt-7">
+        <div><h2 className="text-lg font-semibold text-slate-950">Vizualni elementi</h2><p className="mt-1 text-sm text-slate-500">Neobavezno dodajte PNG ili JPG logotip, potpis i pečat.</p></div>
+        <div className="mt-5 grid gap-4 sm:grid-cols-3">
+          {([ ["logo", "Logotip firme"], ["signature", "Potpis"], ["stamp", "Pečat"] ] as const).map(([key, imageLabel]) => (
+            <label key={key} className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-center transition hover:border-blue-400 hover:bg-blue-50">
+              <ImagePlus className="size-5 text-blue-600" /><span className="mt-2 text-sm font-semibold">{imageLabel}</span><span className="mt-1 text-xs text-slate-500">{images[key] ? "Slika je dodana" : "Odaberite sliku"}</span>
+              <input type="file" accept="image/png,image/jpeg" className="sr-only" onChange={(event) => loadImage(key, event.target.files?.[0])} />
+            </label>
+          ))}
+        </div>
+      </section>
+
       <div className="flex flex-col-reverse gap-3 border-t pt-6 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs leading-5 text-slate-500">Iznosi se automatski izračunavaju. Podaci se još trajno ne spremaju.</p>
-        <Button type="submit">Pripremi pregled</Button>
+        <Button type="submit">Pregledaj dokument</Button>
       </div>
-      {isReady && <div role="status" className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900"><CheckCircle2 className="mt-0.5 size-5 shrink-0" /><p><strong>{type === "invoice" ? "Faktura" : "Ponuda"} je izračunata i spremna za pregled.</strong> Finalno generiranje i preuzimanje bit će dodano u sljedećoj fazi.</p></div>}
     </form>
   );
 }

@@ -7,7 +7,9 @@ import { ArrowLeft, FileCheck2, ShieldCheck } from "lucide-react";
 
 import { CategoryForm } from "@/components/generator/category-form";
 import { CommerceForm } from "@/components/generator/commerce-form";
+import { DocumentPreview } from "@/components/generator/document-preview";
 import { documentTypeDefinitions, documentTypes, type DocumentType } from "@/lib/document-types";
+import type { DocumentLocale, GeneratedDocument } from "@/lib/generated-document";
 import { cn } from "@/lib/utils";
 
 type DocumentGeneratorProps = { initialType: DocumentType; originalPrompt?: string };
@@ -15,6 +17,8 @@ type DocumentGeneratorProps = { initialType: DocumentType; originalPrompt?: stri
 export function DocumentGenerator({ initialType, originalPrompt }: DocumentGeneratorProps) {
   const router = useRouter();
   const [type, setType] = useState(initialType);
+  const [locale, setLocale] = useState<DocumentLocale>("hr");
+  const [preview, setPreview] = useState<GeneratedDocument | null>(null);
   const definition = documentTypeDefinitions[type];
 
   function changeType(nextType: DocumentType) {
@@ -34,7 +38,13 @@ export function DocumentGenerator({ initialType, originalPrompt }: DocumentGener
               <p className="mt-3 text-base leading-7 text-slate-600">{definition.description}</p>
               {originalPrompt && <p className="mt-3 rounded-xl bg-blue-50 px-4 py-3 text-sm text-blue-900"><span className="font-semibold">Vaš zahtjev:</span> “{originalPrompt}”</p>}
             </div>
-            <div className="flex items-center gap-2 text-xs font-medium text-slate-500"><ShieldCheck className="size-4 text-emerald-600" /> Lokalna obrada bez slanja podataka</div>
+            <div className="space-y-3 lg:text-right">
+              <div className="flex items-center gap-2 text-xs font-medium text-slate-500 lg:justify-end"><ShieldCheck className="size-4 text-emerald-600" /> Lokalna obrada bez slanja podataka</div>
+              <div className="inline-flex rounded-xl border bg-slate-50 p-1" aria-label="Format datuma">
+                <button type="button" onClick={() => setLocale("hr")} className={cn("rounded-lg px-3 py-1.5 text-xs font-semibold", locale === "hr" ? "bg-white text-blue-700 shadow-sm" : "text-slate-500")}>HR datum</button>
+                <button type="button" onClick={() => setLocale("en")} className={cn("rounded-lg px-3 py-1.5 text-xs font-semibold", locale === "en" ? "bg-white text-blue-700 shadow-sm" : "text-slate-500")}>EN date</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -55,9 +65,10 @@ export function DocumentGenerator({ initialType, originalPrompt }: DocumentGener
           <div className="mb-8 border-b pb-6">
             <p className="text-sm text-slate-500">Polja označena zvjezdicom su obavezna.</p>
           </div>
-          {type === "invoice" || type === "offer" ? <CommerceForm key={type} type={type} /> : <CategoryForm key={type} type={type} />}
+          {type === "invoice" || type === "offer" ? <CommerceForm key={type} type={type} locale={locale} onPreview={setPreview} /> : <CategoryForm key={type} type={type} locale={locale} onPreview={setPreview} />}
         </section>
       </div>
+      {preview && <DocumentPreview document={preview} onClose={() => setPreview(null)} />}
     </main>
   );
 }

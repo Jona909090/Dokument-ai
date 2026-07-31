@@ -1,11 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CheckCircle2 } from "lucide-react";
-
 import { FormField, type FieldDefinition } from "@/components/generator/form-field";
 import { Button } from "@/components/ui/button";
-import type { DocumentType } from "@/lib/document-types";
+import { documentTypeDefinitions, type DocumentType } from "@/lib/document-types";
+import type { DocumentLocale, GeneratedDocument } from "@/lib/generated-document";
 
 const fieldsByType: Record<Exclude<DocumentType, "invoice" | "offer">, FieldDefinition[]> = {
   cv: [
@@ -96,31 +95,36 @@ const fieldsByType: Record<Exclude<DocumentType, "invoice" | "offer">, FieldDefi
   ],
 };
 
-type CategoryFormProps = { type: Exclude<DocumentType, "invoice" | "offer"> };
+type CategoryFormProps = {
+  type: Exclude<DocumentType, "invoice" | "offer">;
+  locale: DocumentLocale;
+  onPreview: (document: GeneratedDocument) => void;
+};
 
-export function CategoryForm({ type }: CategoryFormProps) {
+export function CategoryForm({ type, locale, onPreview }: CategoryFormProps) {
   const fields = fieldsByType[type];
   const initialValues = useMemo(() => Object.fromEntries(fields.map((field) => [field.name, ""])), [fields]);
   const [values, setValues] = useState<Record<string, string>>(initialValues);
-  const [isReady, setIsReady] = useState(false);
 
   return (
-    <form onSubmit={(event) => { event.preventDefault(); setIsReady(true); }} className="space-y-7">
+    <form onSubmit={(event) => {
+      event.preventDefault();
+      onPreview({
+        type,
+        title: documentTypeDefinitions[type].label,
+        locale,
+        fields: fields.map((field) => ({ label: field.label, value: values[field.name] ?? "", type: field.type === "date" ? "date" : field.multiline ? "multiline" : undefined })),
+      });
+    }} className="space-y-7">
       <div className="grid gap-5 sm:grid-cols-2">
         {fields.map((field) => (
-          <FormField key={field.name} {...field} value={values[field.name] ?? ""} onChange={(value) => { setValues((current) => ({ ...current, [field.name]: value })); setIsReady(false); }} />
+          <FormField key={field.name} {...field} value={values[field.name] ?? ""} onChange={(value) => setValues((current) => ({ ...current, [field.name]: value }))} />
         ))}
       </div>
       <div className="flex flex-col-reverse gap-3 border-t pt-6 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs leading-5 text-slate-500">Podaci se obrađuju samo lokalno i još se trajno ne spremaju.</p>
-        <Button type="submit">Pripremi pregled</Button>
+        <Button type="submit">Pregledaj dokument</Button>
       </div>
-      {isReady && (
-        <div role="status" className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-          <CheckCircle2 className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
-          <p><strong>Podaci su spremni za pregled.</strong> Generiranje i preuzimanje finalnog dokumenta bit će dodano u sljedećem koraku razvoja.</p>
-        </div>
-      )}
     </form>
   );
 }
