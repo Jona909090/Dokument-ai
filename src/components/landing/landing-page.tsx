@@ -39,7 +39,7 @@ export function LandingPage() {
       return;
     }
     setLoading(true);
-    router.push(`/generator?type=${type}&prompt=${encodeURIComponent(request.trim())}`);
+    router.push(`/wizard?type=${type}&prompt=${encodeURIComponent(request.trim())}`);
   }
 
   return (

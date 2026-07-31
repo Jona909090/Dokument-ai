@@ -15,6 +15,7 @@ Projekt sadrži javnu početnu stranicu, lokalni generator i izvoz dokumenata te
 - trostupčani editor s live A4 pregledom, lokalnim autosaveom i undo/redo poviješću
 - Command Palette (`Ctrl/Cmd + K`), globalna pretraga, obavijesti i tipkovnički prečaci
 - svijetla i tamna tema, skeleton/loading stanja te responsive SaaS navigacija
+- lokalni Smart Document Wizard s parserom ključnih riječi, quick templates grupama, pitanjima korak po korak, progress barom i smart validacijom
 - PostgreSQL Row Level Security: svaki korisnik pristupa isključivo svojim podacima
 
 ## Tehnologije
@@ -74,3 +75,7 @@ supabase/migrations/  # PostgreSQL migracije i RLS pravila
 ```
 
 Stripe i OpenAI nisu implementirani u ovoj fazi. Projekt je spreman za deployment na Vercel nakon unosa varijabli okruženja i produkcijskih Auth URL-ova.
+
+## Lokalna AI arhitektura
+
+Ruta `/wizard` ne koristi OpenAI, Supabase ni Stripe. `src/lib/wizard.ts` sadrži deklarativna pitanja i pretvaranje odgovora u zajednički format dokumenta, dok `src/lib/document-types.ts` lokalno prepoznaje vrstu dokumenta pomoću ključnih riječi. Buduća AI integracija može zamijeniti parser ili predlaganje odgovora bez promjene wizard UI-ja i sustava izvoza.

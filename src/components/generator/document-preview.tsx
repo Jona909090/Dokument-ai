@@ -12,9 +12,9 @@ import { formatDocumentDate, type GeneratedDocument } from "@/lib/generated-docu
 
 const euro = new Intl.NumberFormat("hr-HR", { style: "currency", currency: "EUR" });
 
-type DocumentPreviewProps = { document: GeneratedDocument; documentId?: string; onClose: () => void };
+type DocumentPreviewProps = { document: GeneratedDocument; documentId?: string; onClose: () => void; allowSave?: boolean };
 
-export function DocumentPreview({ document, documentId, onClose }: DocumentPreviewProps) {
+export function DocumentPreview({ document, documentId, onClose, allowSave = true }: DocumentPreviewProps) {
   const router = useRouter();
   const [downloading, setDownloading] = useState<"pdf" | "docx" | null>(null);
   const [saving, setSaving] = useState(false);
@@ -44,7 +44,7 @@ export function DocumentPreview({ document, documentId, onClose }: DocumentPrevi
         <div className="sticky top-3 z-10 mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-slate-900/95 p-3 text-white shadow-xl backdrop-blur sm:top-6 sm:p-4">
           <div><h2 id="preview-title" className="font-semibold">Pregled dokumenta</h2><p className="text-xs text-slate-400">A4 prikaz prije preuzimanja</p></div>
           <div className="flex flex-1 flex-wrap justify-end gap-2">
-            <Button size="sm" variant="ghost" onClick={handleSave} disabled={saving} className="text-white hover:bg-white/10">{saving ? "Spremanje..." : documentId ? "Spremi" : "Spremi u račun"}</Button>
+            {allowSave && <Button size="sm" variant="ghost" onClick={handleSave} disabled={saving} className="text-white hover:bg-white/10">{saving ? "Spremanje..." : documentId ? "Spremi" : "Spremi u račun"}</Button>}
             <Button size="sm" variant="outline" onClick={() => handleDownload("pdf")} disabled={downloading !== null} className="border-white/20 bg-white/10 text-white hover:bg-white/20">
               {downloading === "pdf" ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} PDF
             </Button>

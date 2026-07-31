@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
 const examples = [
-  "Napravi ponudu za izvođenje radova",
-  "Napiši reklamaciju dobavljaču",
-  "Napravi dnevni izveštaj sa gradilišta",
-  "Napravi profesionalan CV",
+  "Napravi ponudu za hidroizolaciju podruma.",
+  "Treba mi profesionalni CV.",
+  "Napravi fakturu.",
+  "Treba mi ugovor o radu.",
+  "Napravi narudžbenicu.",
 ];
 
 type HeroSectionProps = {
@@ -29,7 +30,7 @@ export function HeroSection({ value, onValueChange, onSubmit, loading }: HeroSec
             Pametniji način za izradu dokumenata
           </div>
           <h1 className="animate-in fade-in slide-in-from-bottom-4 text-balance text-4xl font-semibold tracking-[-0.04em] text-foreground duration-700 sm:text-5xl lg:text-7xl lg:leading-[1.05]">
-            Profesionalni dokumenti. <span className="bg-gradient-to-r from-blue-600 to-indigo-500 bg-clip-text text-transparent">Bez komplikacija.</span>
+            Šta želiš <span className="bg-gradient-to-r from-blue-600 to-indigo-500 bg-clip-text text-transparent">napraviti danas?</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg leading-8 text-muted-foreground sm:text-xl">
             Opišite šta vam treba, odgovorite na nekoliko pitanja i pripremite profesionalan dokument brzo i jednostavno.
@@ -47,7 +48,7 @@ export function HeroSection({ value, onValueChange, onSubmit, loading }: HeroSec
           />
           <div className="flex justify-end pt-3">
             <Button size="lg" onClick={onSubmit} disabled={loading} className="w-full transition hover:scale-[1.02] active:scale-[.98] sm:w-auto">
-              {loading ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" aria-hidden="true" />} {loading ? "Otvaranje editora…" : "Kreiraj dokument"}
+              {loading ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" aria-hidden="true" />} {loading ? "Otvaranje wizarda…" : "Pokreni Smart Wizard"}
             </Button>
           </div>
         </div>
