@@ -16,6 +16,7 @@ export function LandingPage() {
   const [request, setRequest] = useState("");
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const toastTimer = useRef<number | null>(null);
 
   function selectDocument(prompt: string) {
@@ -37,12 +38,13 @@ export function LandingPage() {
       showMessage("Nismo prepoznali vrstu dokumenta. Pokušajte navesti CV, fakturu, ponudu, ugovor, zahtjev, otkaz, narudžbenicu, zapisnik, potvrdu ili poslovno pismo.");
       return;
     }
+    setLoading(true);
     router.push(`/generator?type=${type}&prompt=${encodeURIComponent(request.trim())}`);
   }
 
   return (
     <>
-      <HeroSection value={request} onValueChange={setRequest} onSubmit={startGenerator} />
+      <HeroSection value={request} onValueChange={setRequest} onSubmit={startGenerator} loading={loading} />
       <PopularDocuments onSelect={selectDocument} />
       <HowItWorks />
       <BenefitsSection />

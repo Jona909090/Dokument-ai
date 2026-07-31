@@ -1,2 +1,7 @@
-import { PlaceholderPage } from "@/components/shared/placeholder-page";
-export default function RegisterPage() { return <PlaceholderPage title="Registracija" description="Otvaranje korisničkog naloga biće omogućeno u narednoj fazi." />; }
+import Link from "next/link";
+import { signUp } from "@/app/auth/actions";
+import { AuthShell } from "@/components/auth/auth-shell";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+export default async function RegisterPage({ searchParams }: PageProps<"/register">) { const { message } = await searchParams; return <AuthShell title="Kreirajte račun" description="Spremite, uređujte i izvozite svoje dokumente na jednom mjestu." message={typeof message === "string" ? message : undefined}><form action={signUp} className="space-y-5"><div><label htmlFor="fullName" className="mb-2 block text-sm font-semibold">Ime i prezime</label><Input id="fullName" name="fullName" required minLength={2} autoComplete="name" /></div><div><label htmlFor="email" className="mb-2 block text-sm font-semibold">Email</label><Input id="email" name="email" type="email" required autoComplete="email" /></div><div><label htmlFor="password" className="mb-2 block text-sm font-semibold">Lozinka</label><Input id="password" name="password" type="password" required minLength={8} autoComplete="new-password" /><p className="mt-2 text-xs text-slate-500">Najmanje 8 znakova.</p></div><Button type="submit" className="w-full">Registriraj se</Button></form><p className="mt-6 text-center text-sm text-slate-600">Već imate račun? <Link href="/login" className="font-semibold text-blue-700">Prijavite se</Link></p></AuthShell>; }

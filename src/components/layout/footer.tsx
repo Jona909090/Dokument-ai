@@ -21,7 +21,7 @@ export function Footer() {
         </nav>
       </div>
       <div className="border-t border-white/10">
-        <div className="mx-auto max-w-7xl px-5 py-5 text-xs text-slate-500 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-7xl px-5 py-5 text-xs text-slate-300 sm:px-8 lg:px-10">
           © {new Date().getFullYear()} Dokument AI. Sva prava zadržana.
         </div>
       </div>

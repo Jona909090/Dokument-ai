@@ -22,7 +22,7 @@ export function HowItWorks() {
               <li key={step.title} className="relative rounded-2xl border border-white/10 bg-white/[0.04] p-7">
                 <div className="flex items-center justify-between">
                   <span className="flex size-12 items-center justify-center rounded-xl bg-blue-600"><Icon className="size-5" aria-hidden="true" /></span>
-                  <span className="text-5xl font-semibold text-white/10">0{index + 1}</span>
+                  <span className="text-5xl font-semibold text-white/50">0{index + 1}</span>
                 </div>
                 <h3 className="mt-7 text-lg font-semibold">{step.title}</h3>
                 <p className="mt-3 text-sm leading-6 text-slate-400">{step.description}</p>

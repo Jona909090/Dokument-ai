@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FormField, type FieldDefinition } from "@/components/generator/form-field";
 import { Button } from "@/components/ui/button";
 import { documentTypeDefinitions, type DocumentType } from "@/lib/document-types";
@@ -99,22 +99,20 @@ type CategoryFormProps = {
   type: Exclude<DocumentType, "invoice" | "offer">;
   locale: DocumentLocale;
   onPreview: (document: GeneratedDocument) => void;
+  onLiveChange?: (document: GeneratedDocument) => void;
 };
 
-export function CategoryForm({ type, locale, onPreview }: CategoryFormProps) {
+export function CategoryForm({ type, locale, onPreview, onLiveChange }: CategoryFormProps) {
   const fields = fieldsByType[type];
   const initialValues = useMemo(() => Object.fromEntries(fields.map((field) => [field.name, ""])), [fields]);
   const [values, setValues] = useState<Record<string, string>>(initialValues);
+  const generated = useMemo<GeneratedDocument>(() => ({ type, title: documentTypeDefinitions[type].label, locale, fields: fields.map((field) => ({ label: field.label, value: values[field.name] ?? "", type: field.type === "date" ? "date" : field.multiline ? "multiline" : undefined })) }), [fields, locale, type, values]);
+  useEffect(() => { onLiveChange?.(generated); }, [generated, onLiveChange]);
 
   return (
     <form onSubmit={(event) => {
       event.preventDefault();
-      onPreview({
-        type,
-        title: documentTypeDefinitions[type].label,
-        locale,
-        fields: fields.map((field) => ({ label: field.label, value: values[field.name] ?? "", type: field.type === "date" ? "date" : field.multiline ? "multiline" : undefined })),
-      });
+      onPreview(generated);
     }} className="space-y-7">
       <div className="grid gap-5 sm:grid-cols-2">
         {fields.map((field) => (

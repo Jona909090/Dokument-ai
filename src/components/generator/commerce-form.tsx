@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ImagePlus, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -16,13 +16,15 @@ type CommerceFormProps = {
   type: Extract<DocumentType, "invoice" | "offer">;
   locale: DocumentLocale;
   onPreview: (document: GeneratedDocument) => void;
+  onLiveChange?: (document: GeneratedDocument) => void;
 };
 
 function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return <label htmlFor={htmlFor} className="mb-2 block text-sm font-semibold text-slate-800">{children}</label>;
 }
 
-export function CommerceForm({ type, locale, onPreview }: CommerceFormProps) {
+export function CommerceForm({ type, locale, onPreview, onLiveChange }: CommerceFormProps) {
+  const formRef = useRef<HTMLFormElement>(null);
   const label = type === "invoice" ? "fakture" : "ponude";
   const [items, setItems] = useState<LineItem[]>([{ id: 1, description: "", quantity: 1, price: 0 }]);
   const [taxRate, setTaxRate] = useState(25);
@@ -34,6 +36,13 @@ export function CommerceForm({ type, locale, onPreview }: CommerceFormProps) {
     const tax = subtotal * Math.max(0, taxRate) / 100;
     return { subtotal, taxRate, tax, total: subtotal + tax };
   }, [items, taxRate]);
+
+  const buildDocument = useCallback((): GeneratedDocument => {
+    const form = formRef.current ? new FormData(formRef.current) : new FormData();
+    const fields = [["Naziv firme", "companyName"], ["OIB / porezni broj", "companyTaxId"], ["Adresa firme", "companyAddress"], ["Kupac", "buyerName"], ["OIB / porezni broj kupca", "buyerTaxId"], ["Adresa kupca", "buyerAddress"], [`Broj ${label}`, "documentNumber"], ["Datum", "documentDate"]].map(([fieldLabel, name]) => ({ label: fieldLabel, value: String(form.get(name) ?? ""), type: name === "documentDate" ? "date" as const : undefined }));
+    return { type, title: documentTypeDefinitions[type].label, locale, fields, items: items.map((item) => ({ ...item, amount: item.quantity * item.price })), totals, images };
+  }, [images, items, label, locale, totals, type]);
+  useEffect(() => { onLiveChange?.(buildDocument()); }, [buildDocument, onLiveChange]);
 
   function updateItem(id: number, changes: Partial<LineItem>) {
     setItems((current) => current.map((item) => item.id === id ? { ...item, ...changes } : item));
@@ -56,15 +65,9 @@ export function CommerceForm({ type, locale, onPreview }: CommerceFormProps) {
   }
 
   return (
-    <form onSubmit={(event) => {
+    <form ref={formRef} onInput={() => onLiveChange?.(buildDocument())} onSubmit={(event) => {
       event.preventDefault();
-      const form = new FormData(event.currentTarget);
-      const fields = [
-        ["Naziv firme", "companyName"], ["OIB / porezni broj", "companyTaxId"], ["Adresa firme", "companyAddress"],
-        ["Kupac", "buyerName"], ["OIB / porezni broj kupca", "buyerTaxId"], ["Adresa kupca", "buyerAddress"],
-        [`Broj ${label}`, "documentNumber"], ["Datum", "documentDate"],
-      ].map(([fieldLabel, name]) => ({ label: fieldLabel, value: String(form.get(name) ?? ""), type: name === "documentDate" ? "date" as const : undefined }));
-      onPreview({ type, title: documentTypeDefinitions[type].label, locale, fields, items: items.map((item) => ({ ...item, amount: item.quantity * item.price })), totals, images });
+      onPreview(buildDocument());
     }} className="space-y-8">
       <section>
         <h2 className="text-lg font-semibold text-slate-950">Podaci izdavatelja</h2>
