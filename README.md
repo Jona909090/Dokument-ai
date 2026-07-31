@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Dokument AI
 
-## Getting Started
+Profesionalna početna osnova za SaaS aplikaciju izgrađenu s Next.js App Routerom.
 
-First, run the development server:
+Projekt trenutačno sadrži samo tehničku osnovu. AI funkcionalnosti, autentikacija, baza podataka, naplata i dashboard namjerno još nisu implementirani.
+
+## Tehnologije
+
+- Next.js (App Router)
+- React i TypeScript
+- Tailwind CSS
+- shadcn/ui
+- Lucide Icons
+- ESLint
+- npm
+
+## Lokalno pokretanje
+
+Potrebni su Node.js 20.9 ili noviji i npm.
 
 ```bash
+npm install
+copy .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Aplikacija će biti dostupna na [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Na macOS-u ili Linuxu umjesto `copy` koristite:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cp .env.example .env.local
+```
 
-## Learn More
+## Dostupne naredbe
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run dev       # razvojni server
+npm run build     # produkcijski build
+npm run start     # pokretanje produkcijskog builda
+npm run lint      # ESLint provjera
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Struktura
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```text
+src/
+├── app/              # App Router, globalni stilovi i metadata
+├── components/
+│   └── ui/           # shadcn/ui komponente
+└── lib/              # zajedničke pomoćne funkcije
+public/               # statičke datoteke
+```
 
-## Deploy on Vercel
+## Varijable okruženja
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Datoteka `.env.example` dokumentira buduće varijable za Supabase, Stripe i OpenAI. Vrijednosti su namjerno prazne i nijedna usluga još nije povezana. Kopirajte datoteku u `.env.local` samo kada su lokalne vrijednosti potrebne.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Planirane integracije
+
+Projekt je strukturiran tako da se u kasnijim fazama može povezati s GitHubom, Supabaseom, Stripeom, OpenAI API-jem i Vercelom. Ove integracije nisu dio trenutačne faze.
