@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, CircleHelp, FilePlus2, FileText, Info, LayoutDashboard, LogOut, Menu, Search, Settings, Star, UserRound, X } from "lucide-react";
+import { BarChart3, Bell, CircleHelp, FilePlus2, FileText, Info, LayoutDashboard, LogOut, Menu, Search, Settings, Star, UserRound, X } from "lucide-react";
 
 import { signOut } from "@/app/auth/actions";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 const links = [
   { href: "/dashboard", label: "Pregled", icon: LayoutDashboard },
   { href: "/dashboard?view=favorites", label: "Omiljeni", icon: Star },
+  { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/dashboard/settings", label: "Postavke", icon: Settings },
   { href: "/dashboard/help", label: "Centar za pomoć", icon: CircleHelp },
   { href: "/dashboard/about", label: "O aplikaciji", icon: Info },

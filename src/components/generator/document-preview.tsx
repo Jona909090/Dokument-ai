@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { saveGeneratedDocument, updateGeneratedDocument } from "@/app/dashboard/actions";
 import { downloadDocx, downloadPdf } from "@/lib/document-export";
 import { formatDocumentDate, type GeneratedDocument } from "@/lib/generated-document";
+import { categoryForDocument, trackEvent } from "@/lib/analytics/service";
 
 const euro = new Intl.NumberFormat("hr-HR", { style: "currency", currency: "EUR" });
 
@@ -25,6 +26,7 @@ export function DocumentPreview({ document, documentId, onClose, allowSave = tru
     try {
       if (format === "pdf") await downloadPdf(document);
       else await downloadDocx(document);
+      trackEvent(format === "pdf" ? "document_exported_pdf" : "document_exported_docx", { document_type: document.type, document_category: categoryForDocument(document.type), language: document.locale });
     } finally {
       setDownloading(null);
     }
@@ -35,6 +37,7 @@ export function DocumentPreview({ document, documentId, onClose, allowSave = tru
     const result = documentId ? await updateGeneratedDocument(documentId, document) : await saveGeneratedDocument(document);
     setSaving(false);
     if (result.error) { setSaveMessage(result.error); return; }
+    trackEvent("document_saved", { document_type: document.type, document_category: categoryForDocument(document.type), language: document.locale });
     router.push(`/dashboard/documents/${result.id}`);
   }
 

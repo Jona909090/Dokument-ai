@@ -16,6 +16,7 @@ Projekt sadrži javnu početnu stranicu, lokalni generator i izvoz dokumenata te
 - Command Palette (`Ctrl/Cmd + K`), globalna pretraga, obavijesti i tipkovnički prečaci
 - svijetla i tamna tema, skeleton/loading stanja te responsive SaaS navigacija
 - lokalni Smart Document Wizard s parserom ključnih riječi, quick templates grupama, pitanjima korak po korak, progress barom i smart validacijom
+- privacy-first analitička infrastruktura s centralnim `trackEvent` servisom, lokalnim adapterom i demo administratorskim dashboardom na `/analytics`
 - PostgreSQL Row Level Security: svaki korisnik pristupa isključivo svojim podacima
 
 ## Tehnologije
@@ -79,3 +80,7 @@ Stripe i OpenAI nisu implementirani u ovoj fazi. Projekt je spreman za deploymen
 ## Lokalna AI arhitektura
 
 Ruta `/wizard` ne koristi OpenAI, Supabase ni Stripe. `src/lib/wizard.ts` sadrži deklarativna pitanja i pretvaranje odgovora u zajednički format dokumenta, dok `src/lib/document-types.ts` lokalno prepoznaje vrstu dokumenta pomoću ključnih riječi. Buduća AI integracija može zamijeniti parser ili predlaganje odgovora bez promjene wizard UI-ja i sustava izvoza.
+
+## Analitika korištenja
+
+`src/lib/analytics/` sadrži strogo tipizirane događaje, centralni servis, zamjenjivi adapter, demo podatke i izračun metrika. Lokalni adapter sprema najviše 1000 privacy-safe događaja u `localStorage`; ne koristi cookies niti šalje podatke vanjskim servisima. Promptovi, odgovori, sadržaj dokumenta, imena, adrese, iznosi, porezni brojevi i email adrese nisu dio Analytics API-ja. Buduća, trenutno neaktivna SQL shema nalazi se u `supabase/schema/analytics_events.sql`.

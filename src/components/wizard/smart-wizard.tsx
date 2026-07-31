@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Check, FileText, RotateCcw, Sparkles } from "lucide-react";
 import { DocumentPreview } from "@/components/generator/document-preview";
@@ -13,6 +13,7 @@ import {
   type DocumentType,
 } from "@/lib/document-types";
 import { buildWizardDocument, wizardQuestions } from "@/lib/wizard";
+import { categoryForDocument, trackEvent } from "@/lib/analytics/service";
 
 export function SmartWizard({
   initialType,
@@ -29,12 +30,29 @@ export function SmartWizard({
   const [previewOpen, setPreviewOpen] = useState(false);
   const [complete, setComplete] = useState(false);
   const [saved, setSaved] = useState(false);
+  const activeRef = useRef(false);
+  const completedRef = useRef(false);
+  const trackedTypeRef = useRef<DocumentType | null>(initialType);
+  const startedAtRef = useRef(0);
   const questions = type ? wizardQuestions[type] : [];
   const question = questions[step];
   const document = useMemo(
     () => (type ? buildWizardDocument(type, answers) : null),
     [answers, type],
   );
+
+  useEffect(() => {
+    if (!initialType) return;
+    activeRef.current = true;
+    startedAtRef.current = performance.now();
+    const metadata = { document_type: initialType, document_category: categoryForDocument(initialType), language: "hr" as const };
+    trackEvent("document_type_viewed", metadata);
+    trackEvent("document_started", metadata);
+  }, [initialType]);
+  useEffect(() => () => {
+    const trackedType = trackedTypeRef.current;
+    if (activeRef.current && !completedRef.current && trackedType) trackEvent("document_abandoned", { document_type: trackedType, document_category: categoryForDocument(trackedType), language: "hr", duration_seconds: (performance.now() - startedAtRef.current) / 1000 });
+  }, []);
 
   useEffect(() => {
     if (!type || !Object.keys(answers).length) return;
@@ -61,6 +79,9 @@ export function SmartWizard({
     setStep(0);
     setAnswers({});
     setComplete(false);
+    activeRef.current = true; completedRef.current = false; trackedTypeRef.current = nextType; startedAtRef.current = performance.now();
+    const metadata = { document_type: nextType, document_category: categoryForDocument(nextType), language: "hr" as const };
+    trackEvent("document_type_viewed", metadata); trackEvent("document_started", metadata);
     window.history.pushState(
       null,
       "",
@@ -68,6 +89,8 @@ export function SmartWizard({
     );
   }
   function reset() {
+    if (activeRef.current && !completedRef.current && trackedTypeRef.current) trackEvent("document_abandoned", { document_type: trackedTypeRef.current, document_category: categoryForDocument(trackedTypeRef.current), language: "hr", duration_seconds: (performance.now() - startedAtRef.current) / 1000 });
+    activeRef.current = false;
     setType(null);
     setStep(0);
     setAnswers({});
@@ -76,7 +99,7 @@ export function SmartWizard({
     window.history.pushState(null, "", "/wizard");
   }
   function next() {
-    if (!question) return;
+    if (!question || !type) return;
     if (question.required && !answers[question.id]?.trim()) {
       setError(
         `${question.label} je obavezno polje. Unesite podatak prije nastavka.`,
@@ -84,8 +107,11 @@ export function SmartWizard({
       return;
     }
     setError("");
+    trackEvent("wizard_step_completed", { document_type: type, document_category: categoryForDocument(type), language: "hr", current_step: step + 1, total_steps: questions.length, duration_seconds: (performance.now() - startedAtRef.current) / 1000 });
     if (step === questions.length - 1) {
       setComplete(true);
+      completedRef.current = true; activeRef.current = false;
+      trackEvent("document_completed", { document_type: type, document_category: categoryForDocument(type), language: "hr", current_step: questions.length, total_steps: questions.length, duration_seconds: (performance.now() - startedAtRef.current) / 1000 });
       setPreviewOpen(true);
     } else setStep((value) => value + 1);
   }
