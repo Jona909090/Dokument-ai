@@ -1,8 +1,14 @@
 # Dokument AI
 
-Profesionalna početna osnova za SaaS aplikaciju izgrađenu s Next.js App Routerom.
+Profesionalna SaaS aplikacija za pripremu poslovnih i osobnih dokumenata, izgrađena s Next.js App Routerom.
 
-Projekt trenutačno sadrži samo tehničku osnovu. AI funkcionalnosti, autentikacija, baza podataka, naplata i dashboard namjerno još nisu implementirani.
+Projekt trenutačno sadrži javnu početnu stranicu i lokalnu prvu verziju generatora obrazaca. AI funkcionalnosti, autentikacija, baza podataka, naplata, trajno spremanje i izvoz još nisu implementirani.
+
+## Generator dokumenata
+
+Unos na početnoj stranici lokalno prepoznaje deset kategorija: CV, fakturu, ponudu, ugovor, zahtjev ili molbu, otkaz, narudžbenicu, zapisnik, potvrdu i poslovno pismo.
+
+Faktura i ponuda podržavaju proizvoljan broj stavki, količine i cijene te automatski izračun osnovice, PDV-a i ukupnog iznosa. Podaci uneseni u obrasce trenutačno se ne šalju na poslužitelj niti se trajno spremaju.
 
 ## Tehnologije
 
@@ -47,6 +53,9 @@ npm run lint      # ESLint provjera
 src/
 ├── app/              # App Router, globalni stilovi i metadata
 ├── components/
+│   ├── generator/    # obrasci i logika generatora
+│   ├── landing/      # sekcije početne stranice
+│   ├── layout/       # header i footer
 │   └── ui/           # shadcn/ui komponente
 └── lib/              # zajedničke pomoćne funkcije
 public/               # statičke datoteke
