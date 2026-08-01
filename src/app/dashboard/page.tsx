@@ -1,2 +1,4 @@
 import { LocalDashboardOverview } from "@/components/dashboard/local-dashboard-overview";
-export default function DashboardPage() { return <LocalDashboardOverview />; }
+import { CloudDashboardOverview } from "@/components/dashboard/cloud-dashboard-overview";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+export default function DashboardPage() { return isSupabaseConfigured() ? <CloudDashboardOverview /> : <LocalDashboardOverview />; }

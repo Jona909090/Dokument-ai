@@ -16,11 +16,21 @@ function authRedirect(path: string, message: string): never {
 export async function signIn(formData: FormData) {
   const email = emailSchema.safeParse(formData.get("email"));
   const password = passwordSchema.safeParse(formData.get("password"));
+  const next = z.string().startsWith("/").max(500).safeParse(formData.get("next"));
   if (!email.success || !password.success) authRedirect("/login", "Unesite valjan email i lozinku od najmanje 8 znakova.");
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email: email.data, password: password.data });
   if (error) authRedirect("/login", "Prijava nije uspjela. Provjerite podatke i potvrdu email adrese.");
-  redirect("/dashboard");
+  redirect(next.success && !next.data.startsWith("//") ? next.data : "/dashboard");
+}
+
+export async function resendConfirmation(formData: FormData) {
+  const email = emailSchema.safeParse(formData.get("email"));
+  if (!email.success) authRedirect("/confirm-email", "Unesite valjanu email adresu.");
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resend({ type: "signup", email: email.data, options: { emailRedirectTo: `${appUrl}/auth/callback?next=/dashboard` } });
+  if (error) authRedirect("/confirm-email", "Potvrdu trenutačno nije moguće poslati.");
+  authRedirect("/confirm-email", "Nova poveznica za potvrdu je poslana.");
 }
 
 export async function signUp(formData: FormData) {

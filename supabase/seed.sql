@@ -1,0 +1,2 @@
+-- Intentionally empty. Create login-capable test users through local Studio/Auth,
+-- then create organizations through the application so ownership triggers run.

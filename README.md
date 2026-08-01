@@ -47,6 +47,40 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 
 U ovoj lokalnoj fazi nisu potrebne varijable okruženja. OpenAI, Stripe i ostali vanjski servisi nisu povezani.
 
+## Supabase produkcijska konfiguracija
+
+Lokalni adapter ostaje demo fallback. Produkcijska infrastruktura koristi verzionirane migracije u `supabase/migrations`, Supabase Auth, multi-tenant PostgreSQL s RLS politikama te privatni Storage bucket.
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+Koristite publishable key gdje je dostupan; anon key je kompatibilni fallback. Service-role ključ je isključivo serverska tajna i nikada ne smije imati `NEXT_PUBLIC_` prefiks.
+
+Lokalni razvoj zahtijeva Docker-compatible runtime i Supabase CLI:
+
+```bash
+npx supabase start
+npx supabase db reset
+```
+
+Za povezivanje s udaljenim projektom:
+
+```bash
+npx supabase login
+npx supabase link --project-ref YOUR_PROJECT_REF
+npx supabase db push --dry-run
+npx supabase db push
+```
+
+U Supabase Auth postavite Site URL i dopustite `${NEXT_PUBLIC_APP_URL}/auth/callback`. Bucket `private-documents` je privatan; putanje počinju s `organization-id/` i zaštićene su Storage RLS politikama.
+
+Na Vercelu dodajte varijable zasebno za Production, Preview i Development. Nakon deploymenta postavite `NEXT_PUBLIC_APP_URL` na kanonsku HTTPS domenu. Bez Supabase varijabli aplikacija nastavlja raditi u lokalnom demo načinu.
+
 ## Lokalno pokretanje
 
 Potrebni su Node.js 20.9 ili noviji i npm.

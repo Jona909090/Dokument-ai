@@ -14,7 +14,7 @@ const documentSchema = z.object({
   items: z.array(z.object({ description: z.string(), quantity: z.number(), price: z.number(), amount: z.number() })).optional(),
   totals: z.object({ subtotal: z.number(), taxRate: z.number(), tax: z.number(), total: z.number() }).optional(),
   images: z.object({ logo: z.string().optional(), signature: z.string().optional(), stamp: z.string().optional() }).optional(),
-});
+}).passthrough();
 
 async function authenticatedClient() {
   const supabase = await createClient();
@@ -28,7 +28,10 @@ export async function saveGeneratedDocument(input: GeneratedDocument) {
   if (!parsed.success) return { error: "Dokument sadrži neispravne podatke." };
   const auth = await authenticatedClient();
   if (!auth) return { error: "Prijavite se kako biste spremili dokument." };
-  const { data, error } = await auth.supabase.from("documents").insert({ user_id: auth.user.id, title: parsed.data.title, type: parsed.data.type, content: parsed.data }).select("id").single();
+  const { data: profile } = await auth.supabase.from("profiles").select("current_organization_id").eq("id", auth.user.id).single();
+  if (!profile?.current_organization_id) return { error: "Prvo kreirajte ili odaberite organizaciju." };
+  const totals = parsed.data.totals;
+  const { data, error } = await auth.supabase.from("documents").insert({ organization_id: profile.current_organization_id, owner_user_id: auth.user.id, title: parsed.data.title, document_type: parsed.data.type, document_category: "administration", language: parsed.data.locale, rendered_content: parsed.data, form_data: {}, subtotal_minor: Math.round((totals?.subtotal ?? 0) * 100), tax_minor: Math.round((totals?.tax ?? 0) * 100), total_minor: Math.round((totals?.total ?? 0) * 100) }).select("id").single();
   if (error) return { error: error.message };
   revalidatePath("/dashboard");
   return { id: data.id };
@@ -40,7 +43,8 @@ export async function updateGeneratedDocument(id: string, input: GeneratedDocume
   if (!validId.success || !parsed.success) return { error: "Neispravni podaci dokumenta." };
   const auth = await authenticatedClient();
   if (!auth) return { error: "Sesija je istekla." };
-  const { error } = await auth.supabase.from("documents").update({ title: parsed.data.title, type: parsed.data.type, content: parsed.data }).eq("id", id);
+  const totals = parsed.data.totals;
+  const { error } = await auth.supabase.from("documents").update({ title: parsed.data.title, document_type: parsed.data.type, rendered_content: parsed.data, subtotal_minor: Math.round((totals?.subtotal ?? 0) * 100), tax_minor: Math.round((totals?.tax ?? 0) * 100), total_minor: Math.round((totals?.total ?? 0) * 100) }).eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/dashboard"); revalidatePath(`/dashboard/documents/${id}`);
   return { id };
@@ -51,7 +55,7 @@ export async function deleteDocument(formData: FormData) {
   if (!id.success) return;
   const auth = await authenticatedClient();
   if (!auth) redirect("/login");
-  await auth.supabase.from("documents").delete().eq("id", id.data);
+  await auth.supabase.from("documents").update({ deleted_at: new Date().toISOString() }).eq("id", id.data);
   revalidatePath("/dashboard");
 }
 

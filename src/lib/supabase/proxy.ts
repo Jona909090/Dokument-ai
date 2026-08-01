@@ -1,24 +1,17 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { isSupabaseConfigured, publicSupabaseKey } from "@/lib/supabase/config";
 
 export async function updateSession(request: NextRequest) {
   if (!isSupabaseConfigured()) {
-    if (request.nextUrl.pathname.startsWith("/dashboard")) {
-      return NextResponse.redirect(
-        new URL(
-          "/login?message=Supabase nije konfiguriran. Dodajte vrijednosti u .env.local.",
-          request.url,
-        ),
-      );
-    }
+    // Keep the local demo/fallback available when cloud mode is not configured.
     return NextResponse.next({ request });
   }
 
   let response = NextResponse.next({ request });
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    publicSupabaseKey(),
     {
       cookies: {
         getAll: () => request.cookies.getAll(),
@@ -31,9 +24,10 @@ export async function updateSession(request: NextRequest) {
     },
   );
   const { data: { user } } = await supabase.auth.getUser();
-  const protectedRoute = request.nextUrl.pathname.startsWith("/dashboard");
-  const authRoute = request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/register";
-  if (protectedRoute && !user) return NextResponse.redirect(new URL("/login?message=Prijavite se za pristup dashboardu.", request.url));
+  const protectedPrefixes = ["/dashboard","/documents","/contacts","/companies","/projects","/settings","/profile","/subscription","/analytics"];
+  const protectedRoute = protectedPrefixes.some((prefix) => request.nextUrl.pathname === prefix || request.nextUrl.pathname.startsWith(`${prefix}/`));
+  const authRoute = ["/login","/register","/reset-password"].includes(request.nextUrl.pathname);
+  if (protectedRoute && !user) { const login = new URL("/login", request.url); login.searchParams.set("next", `${request.nextUrl.pathname}${request.nextUrl.search}`); login.searchParams.set("message", "Prijavite se za nastavak."); return NextResponse.redirect(login); }
   if (authRoute && user) return NextResponse.redirect(new URL("/dashboard", request.url));
   return response;
 }
