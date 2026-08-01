@@ -5,7 +5,7 @@ Pametni poslovni dokumenti, profesionalni predlošci te PDF i Word izvoz iz jedn
 [![Otvori aplikaciju](https://img.shields.io/badge/Otvori%20aplikaciju-Live-2563EB?style=for-the-badge&logo=vercel&logoColor=white)](https://dokument-ai-kohl.vercel.app)
 [![Pogledaj izvorni kod](https://img.shields.io/badge/Pogledaj%20izvorni%20kod-GitHub-181717?style=for-the-badge&logo=github)](https://github.com/Jona909090/Dokument-ai)
 
-[![Vercel Production](https://img.shields.io/github/deployments/Jona909090/Dokument-ai/Production?label=Vercel%20Production&logo=vercel)](https://dokument-ai-kohl.vercel.app)
+[![Vercel Production](https://img.shields.io/badge/Vercel%20Production-Deployed-000000?logo=vercel)](https://dokument-ai-kohl.vercel.app)
 
 **Production:** [dokument-ai-kohl.vercel.app](https://dokument-ai-kohl.vercel.app)
 
