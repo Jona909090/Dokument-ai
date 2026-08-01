@@ -255,7 +255,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
     font-size: 11px;
   }
 
-  body > footer > div {
+  body footer > div {
     gap: 12px;
     padding-block: 8px;
   }

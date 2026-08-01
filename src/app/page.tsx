@@ -13,10 +13,10 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <>
+    <div className="flex min-h-screen flex-col bg-muted/25">
       <Header />
-      <main><LandingPage /></main>
+      <main className="flex-1 bg-background"><LandingPage /></main>
       <Footer />
-    </>
+    </div>
   );
 }
