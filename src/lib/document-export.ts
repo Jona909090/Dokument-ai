@@ -17,6 +17,7 @@ import { downloadInvoiceDocx, downloadInvoicePdf } from "@/lib/invoice-export";
 import { buildVisibleDocumentModel } from "@/lib/document-visibility";
 import { downloadDailyReportDocx, downloadDailyReportPdf } from "@/lib/daily-report-export";
 import { downloadCompletedWorksReportDocx, downloadCompletedWorksReportPdf } from "@/lib/completed-works-report-export";
+import { downloadWorkHandoverDocx, downloadWorkHandoverPdf } from "@/lib/work-handover-export";
 
 const euro = new Intl.NumberFormat("hr-HR", {
   style: "currency",
@@ -33,6 +34,7 @@ function displayValue(
 
 export async function downloadPdf(document: GeneratedDocument) {
   document = buildVisibleDocumentModel(document);
+  if (document.workHandover) return downloadWorkHandoverPdf(document);
   if (document.completedWorksReport) return downloadCompletedWorksReportPdf(document);
   if (document.dailyReport) return downloadDailyReportPdf(document);
   if (document.invoice) return downloadInvoicePdf(document);
@@ -263,6 +265,7 @@ function imageType(dataUrl: string): "jpg" | "png" {
 
 export async function downloadDocx(documentData: GeneratedDocument) {
   documentData = buildVisibleDocumentModel(documentData);
+  if (documentData.workHandover) return downloadWorkHandoverDocx(documentData);
   if (documentData.completedWorksReport) return downloadCompletedWorksReportDocx(documentData);
   if (documentData.dailyReport) return downloadDailyReportDocx(documentData);
   if (documentData.invoice) return downloadInvoiceDocx(documentData);

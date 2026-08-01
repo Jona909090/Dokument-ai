@@ -13,6 +13,7 @@ import { categoryForDocument, trackEvent } from "@/lib/analytics/service";
 import { buildVisibleDocumentModel } from "@/lib/document-visibility";
 import { DailyReportSheet } from "@/components/generator/daily-report-sheet";
 import { CompletedWorksReportSheet } from "@/components/generator/completed-works-report-sheet";
+import { WorkHandoverSheet } from "@/components/generator/work-handover-sheet";
 export function InlineA4Preview({
   document,
   onExpand,
@@ -46,7 +47,9 @@ export function InlineA4Preview({
         </span>
       </div>
       <div className="aspect-[210/297] w-full overflow-hidden rounded-xl border bg-white shadow-2xl">
-        {visibleDocument.completedWorksReport ? (
+        {visibleDocument.workHandover ? (
+          <WorkHandoverSheet data={visibleDocument.workHandover} compact />
+        ) : visibleDocument.completedWorksReport ? (
           <CompletedWorksReportSheet data={visibleDocument.completedWorksReport} compact />
         ) : visibleDocument.dailyReport ? (
           <DailyReportSheet data={visibleDocument.dailyReport} compact />

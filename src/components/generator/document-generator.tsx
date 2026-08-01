@@ -22,6 +22,7 @@ import { InlineA4Preview } from "@/components/generator/inline-a4-preview";
 import { DocumentVisibilityPanel } from "@/components/generator/visibility-controls";
 import { DailyReportForm } from "@/components/generator/daily-report-form";
 import { CompletedWorksReportForm } from "@/components/generator/completed-works-report-form";
+import { WorkHandoverForm } from "@/components/generator/work-handover-form";
 import { Button } from "@/components/ui/button";
 import {
   documentTypeDefinitions,
@@ -297,7 +298,9 @@ export function DocumentGenerator({
                 document={liveDocument}
                 onChange={updateVisibility}
               />
-              {type === "completed-works-report" ? (
+              {type === "work-handover" ? (
+                <WorkHandoverForm key={type} locale={locale} onPreview={() => setModal(true)} onLiveChange={updateLive} />
+              ) : type === "completed-works-report" ? (
                 <CompletedWorksReportForm key={type} locale={locale} onPreview={() => setModal(true)} onLiveChange={updateLive} />
               ) : type === "daily-report" ? (
                 <DailyReportForm key={type} locale={locale} onPreview={() => setModal(true)} onLiveChange={updateLive} />

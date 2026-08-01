@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { documentTypeDefinitions, type DocumentType } from "@/lib/document-types";
 import type { DocumentLocale, GeneratedDocument } from "@/lib/generated-document";
 
-const fieldsByType: Record<Exclude<DocumentType, "invoice" | "proforma" | "offer" | "daily-report" | "completed-works-report">, FieldDefinition[]> = {
+const fieldsByType: Record<Exclude<DocumentType, "invoice" | "proforma" | "offer" | "daily-report" | "completed-works-report" | "work-handover">, FieldDefinition[]> = {
   cv: [
     { name: "fullName", label: "Ime i prezime", required: true },
     { name: "title", label: "Profesionalni naslov", placeholder: "npr. Voditelj projekta", required: true },
@@ -96,7 +96,7 @@ const fieldsByType: Record<Exclude<DocumentType, "invoice" | "proforma" | "offer
 };
 
 type CategoryFormProps = {
-  type: Exclude<DocumentType, "invoice" | "proforma" | "offer" | "purchase-order" | "daily-report" | "completed-works-report">;
+  type: Exclude<DocumentType, "invoice" | "proforma" | "offer" | "purchase-order" | "daily-report" | "completed-works-report" | "work-handover">;
   locale: DocumentLocale;
   onPreview: (document: GeneratedDocument) => void;
   onLiveChange?: (document: GeneratedDocument) => void;

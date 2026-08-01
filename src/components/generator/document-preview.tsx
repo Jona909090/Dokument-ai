@@ -20,6 +20,7 @@ import { InvoiceSheet } from "@/components/generator/invoice-sheet";
 import { buildVisibleDocumentModel } from "@/lib/document-visibility";
 import { DailyReportSheet } from "@/components/generator/daily-report-sheet";
 import { CompletedWorksReportSheet } from "@/components/generator/completed-works-report-sheet";
+import { WorkHandoverSheet } from "@/components/generator/work-handover-sheet";
 
 const euro = new Intl.NumberFormat("hr-HR", {
   style: "currency",
@@ -184,7 +185,9 @@ export function DocumentPreview({
           </div>
         )}
 
-        {visibleDocument.completedWorksReport ? (
+        {visibleDocument.workHandover ? (
+          <div className="mx-auto max-w-[210mm] shadow-2xl"><WorkHandoverSheet data={visibleDocument.workHandover} /></div>
+        ) : visibleDocument.completedWorksReport ? (
           <div className="mx-auto max-w-[210mm] shadow-2xl"><CompletedWorksReportSheet data={visibleDocument.completedWorksReport} /></div>
         ) : visibleDocument.dailyReport ? (
           <div className="mx-auto max-w-[210mm] shadow-2xl"><DailyReportSheet data={visibleDocument.dailyReport} /></div>

@@ -1,6 +1,7 @@
 import type { DocumentType } from "@/lib/document-types";
 import type { GeneratedDocument } from "@/lib/generated-document";
 import { completedWorksFields } from "@/lib/completed-works-report";
+import { handoverFields } from "@/lib/work-handover";
 
 export type FieldVisibility = { isVisible: boolean };
 export type SectionVisibility = {
@@ -60,6 +61,7 @@ export const sectionLabels: Record<string, string> = {
   taxNotes: "Porezne napomene",
   weather: "Vrijeme", workforce: "Radnici", completedWorks: "Izvedeni radovi", plannedWorks: "Planirani radovi", materials: "Materijal", equipment: "Strojevi", deliveries: "Dostave", problems: "Problemi i zastoji", quality: "Kvaliteta", safety: "Sigurnost", visitors: "Posjetitelji", meetings: "Sastanci", photos: "Fotografije", attachments: "Prilozi", custom: "Prilagođene sekcije",
   intro: "Uvodni tekst", phases: "Faze", works: "Izvedeni radovi", additionalWorks: "Dodatni radovi", defects: "Nedostaci", deductions: "Odbici", conclusion: "Zaključak",
+  participants: "Sudionici", subject: "Predmet primopredaje", groups: "Grupe radova", deadlines: "Rokovi", documentation: "Dokumentacija", tests: "Ispitivanja", cleaning: "Čišćenje", warranty: "Jamstvo", statements: "Izjave", outcome: "Ishod", reinspection: "Ponovni pregled",
 };
 const columnDefaults: ColumnVisibility[] = [
   ["index", "Redni broj"],
@@ -179,6 +181,9 @@ export function createDefaultVisibility(
           ? completedWorksFields[id as keyof typeof completedWorksFields].map(fieldId)
           : [],
       );
+  if (document?.workHandover)
+    for (const id of [...Object.keys(document.workHandover.sections), "photos"])
+      sections[id] = section(id in handoverFields ? handoverFields[id as keyof typeof handoverFields].map(fieldId) : []);
   return {
     version: 1,
     profileId: "full",
@@ -473,6 +478,17 @@ export function buildVisibleDocumentModel(
     data.photos = isSectionVisible(settings, "photos")
       ? data.photos.map((value) => ({ ...value, visible: settings.items[value.id]?.isVisible ?? value.visible }))
       : [];
+    data.showFinancials = data.showFinancials && isSectionVisible(settings, "financials");
+  }
+  if (document.workHandover) {
+    const data = document.workHandover;
+    const basic = data as unknown as Record<string, unknown>;
+    for (const key of documentFields) if (key in basic && !isFieldVisible(settings, "document", key)) basic[key] = "";
+    for (const [id, values] of Object.entries(data.sections))
+      data.sections[id as keyof typeof data.sections] = isSectionVisible(settings, id)
+        ? values.map(value => ({ ...value, fields: Object.fromEntries(Object.entries(value.fields).map(([key, field]) => [key, isFieldVisible(settings, id, fieldId(key)) ? field : ""])), visible: settings.items[value.id]?.isVisible ?? value.visible, includeInStatistics: settings.items[value.id]?.includeInCalculation ?? value.includeInStatistics }))
+        : [];
+    data.photos = isSectionVisible(settings, "photos") ? data.photos.map(value => ({ ...value, visible: settings.items[value.id]?.isVisible ?? value.visible })) : [];
     data.showFinancials = data.showFinancials && isSectionVisible(settings, "financials");
   }
   return document;

@@ -5,7 +5,7 @@ export type TemplateGroup = "construction" | "administration" | "legal" | "finan
 export type WizardQuestion = { id: string; question: string; label: string; placeholder: string; required?: boolean; type?: "text" | "date" | "email" | "multiline" };
 
 export const templateGroups: Array<{ id: TemplateGroup; label: string; description: string; types: DocumentType[] }> = [
-  { id: "construction", label: "Građevina", description: "Ponude, narudžbenice i gradilišni izvještaji", types: ["offer", "purchase-order", "daily-report", "completed-works-report", "minutes"] },
+  { id: "construction", label: "Građevina", description: "Ponude, narudžbenice i gradilišni izvještaji", types: ["offer", "purchase-order", "daily-report", "completed-works-report", "work-handover", "minutes"] },
   { id: "administration", label: "Administracija", description: "Zahtjevi, potvrde i pisma", types: ["request", "certificate", "business-letter"] },
   { id: "legal", label: "Pravni", description: "Ugovori i službene izjave", types: ["contract", "termination"] },
   { id: "finance", label: "Financije", description: "Fakture, predračuni i poslovne ponude", types: ["invoice", "proforma", "offer"] },
@@ -19,6 +19,13 @@ const common: Record<string, WizardQuestion> = {
 };
 
 export const wizardQuestions: Record<DocumentType, WizardQuestion[]> = {
+  "work-handover": [
+    { id: "project", question: "Kako se zove projekt?", label: "Projekt", placeholder: "Naziv projekta", required: true },
+    { id: "site", question: "Gdje se obavlja primopredaja?", label: "Gradilište", placeholder: "Naziv i adresa", required: true },
+    { id: "subject", question: "Što je predmet primopredaje?", label: "Predmet", placeholder: "Radovi, prostor ili oprema", required: true },
+    common.date,
+    { id: "participants", question: "Tko sudjeluje u primopredaji?", label: "Sudionici", placeholder: "Imena, firme i uloge", type: "multiline", required: true },
+  ],
   "completed-works-report": [
     { id: "project", question: "Kako se zove projekt?", label: "Projekt", placeholder: "Naziv projekta", required: true },
     { id: "site", question: "Koje je gradilište?", label: "Gradilište", placeholder: "Naziv i adresa", required: true },

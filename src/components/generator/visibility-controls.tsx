@@ -250,7 +250,10 @@ export function DocumentVisibilityPanel({
   const [profileName, setProfileName] = useState("");
   const dailyReport = document.dailyReport;
   const completedWorksReport = document.completedWorksReport;
-  const fallbackEntries = completedWorksReport
+  const workHandover = document.workHandover;
+  const fallbackEntries = workHandover
+    ? [...Object.values(workHandover.sections).flat().map((value) => [value.id, value.title] as const), ...workHandover.photos.map((value) => [value.id, value.title] as const)]
+    : completedWorksReport
     ? [...Object.values(completedWorksReport.sections).flat().map((value) => [value.id, value.title] as const), ...completedWorksReport.phases.map((value) => [value.id, value.title] as const), ...completedWorksReport.photos.map((value) => [value.id, value.title] as const)]
     : dailyReport
     ? [...Object.values(dailyReport.sections).flat().map((value) => [value.id, value.title] as const), ...dailyReport.photos.map((value) => [value.id, value.title] as const)]

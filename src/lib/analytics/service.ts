@@ -5,7 +5,7 @@ const STORAGE_KEY = "dokument-ai-analytics-events";
 const SESSION_KEY = "dokument-ai-anonymous-session";
 
 const categoryByType: Record<DocumentType, DocumentCategory> = {
-  cv: "hr", invoice: "finance", proforma: "finance", offer: "construction", contract: "legal", request: "administration", termination: "hr", "purchase-order": "construction", minutes: "administration", certificate: "administration", "business-letter": "administration", "daily-report": "construction", "completed-works-report": "construction",
+  cv: "hr", invoice: "finance", proforma: "finance", offer: "construction", contract: "legal", request: "administration", termination: "hr", "purchase-order": "construction", minutes: "administration", certificate: "administration", "business-letter": "administration", "daily-report": "construction", "completed-works-report": "construction", "work-handover": "construction",
 };
 
 export function categoryForDocument(type: DocumentType) { return categoryByType[type]; }
