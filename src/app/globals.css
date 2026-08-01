@@ -142,6 +142,20 @@ button, a { -webkit-tap-highlight-color: transparent; }
   min-height: auto;
 }
 
+#top main > div:first-child {
+  justify-content: flex-start;
+}
+
+#top main > div:first-child time {
+  margin-left: 6px;
+  border-left: 1px solid var(--border);
+  padding-left: 9px;
+  color: var(--muted-foreground);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
 @media (min-width: 1024px) {
   #top > .mx-auto {
     gap: 10px;
