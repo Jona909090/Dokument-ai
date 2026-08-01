@@ -1,9 +1,135 @@
 "use client";
+
 import { useMemo, useState } from "react";
-import { ArrowRight, ChevronDown, FileText, Search } from "lucide-react";
-import { documentTypeDefinitions, documentTypes, type DocumentType } from "@/lib/document-types";
+import { ArrowRight, FileText, Search } from "lucide-react";
+import {
+  documentTypeDefinitions,
+  documentTypes,
+  type DocumentType,
+} from "@/lib/document-types";
 import { categoryForDocument } from "@/lib/analytics/service";
 import type { TemplateGroup } from "@/lib/wizard";
-const labels:Record<TemplateGroup,string>={construction:"Građevina",administration:"Administracija",legal:"Pravni",finance:"Financije",hr:"HR",personal:"Privatni"};
-const filters=["all","finance","construction","administration","legal","hr","personal"]as const;
-export function PopularDocuments({onOpen}:{onOpen:(type:DocumentType)=>void}){const[query,setQuery]=useState("");const[category,setCategory]=useState<"all"|TemplateGroup>("all");const items=useMemo(()=>documentTypes.filter(type=>{const definition=documentTypeDefinitions[type];return(category==="all"||categoryForDocument(type)===category)&&`${definition.label} ${definition.description}`.toLocaleLowerCase("hr").includes(query.toLocaleLowerCase("hr"))}),[query,category]);return <section id="dokumenti" className="scroll-mt-20 border-t bg-muted/25 py-8"><div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-10"><details className="group rounded-2xl border bg-background shadow-sm"><summary className="flex cursor-pointer list-none items-center gap-4 p-5 sm:px-6"><span className="flex size-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><FileText className="size-5"/></span><span><b className="block text-lg">Ručno odaberite dokument</b><span className="text-sm text-muted-foreground">Pretražite svih {documentTypes.length} postojećih obrazaca i kategorija.</span></span><ChevronDown className="ml-auto size-5 transition group-open:rotate-180"/></summary><div className="border-t p-4 sm:p-6"><div className="flex flex-col gap-3 lg:flex-row"><label className="flex h-10 flex-1 items-center gap-2 rounded-xl border px-3"><Search className="size-4 text-muted-foreground"/><span className="sr-only">Pretražite dokumente</span><input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Pretražite dokumente…" className="min-w-0 flex-1 bg-transparent text-sm outline-none"/></label><div className="flex gap-1.5 overflow-x-auto">{filters.map(id=><button key={id} onClick={()=>setCategory(id)} className={`shrink-0 rounded-full border px-3 py-2 text-xs ${category===id?"bg-blue-600 text-white":"hover:border-blue-300"}`}>{id==="all"?"Sve":labels[id]}</button>)}</div></div><div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{items.map(type=>{const definition=documentTypeDefinitions[type];return <button key={type} onClick={()=>onOpen(type)} className="group/card flex items-center gap-3 rounded-xl border p-3 text-left transition hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950"><span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950"><FileText className="size-4"/></span><span className="min-w-0"><b className="block truncate text-sm">{definition.label}</b><span className="block truncate text-[11px] text-muted-foreground">{labels[categoryForDocument(type)]}</span></span><ArrowRight className="ml-auto size-3.5 text-muted-foreground transition group-hover/card:translate-x-1"/></button>})}</div></div></details></div></section>}
+
+const labels: Record<TemplateGroup, string> = {
+  construction: "Građevina",
+  administration: "Administracija",
+  legal: "Pravni",
+  finance: "Financije",
+  hr: "HR",
+  personal: "Privatni",
+};
+
+const filters = [
+  "all",
+  "finance",
+  "construction",
+  "administration",
+  "legal",
+  "hr",
+  "personal",
+] as const;
+
+export function PopularDocuments({
+  onOpen,
+}: {
+  onOpen: (type: DocumentType) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<"all" | TemplateGroup>("all");
+  const items = useMemo(
+    () =>
+      documentTypes.filter((type) => {
+        const definition = documentTypeDefinitions[type];
+        return (
+          (category === "all" || categoryForDocument(type) === category) &&
+          `${definition.label} ${definition.description}`
+            .toLocaleLowerCase("hr")
+            .includes(query.toLocaleLowerCase("hr"))
+        );
+      }),
+    [query, category],
+  );
+
+  return (
+    <section
+      id="dokumenti"
+      className="scroll-mt-20 border-t bg-muted/25 py-8"
+      aria-labelledby="manual-documents-title"
+    >
+      <div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-10">
+        <div className="overflow-hidden rounded-2xl border bg-background shadow-sm">
+          <div className="flex min-h-14 items-center gap-4 p-5 sm:px-6">
+            <span className="flex size-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+              <FileText className="size-5" />
+            </span>
+            <span>
+              <b id="manual-documents-title" className="block text-lg">
+                Ručno odaberite dokument
+              </b>
+              <span className="text-sm text-muted-foreground">
+                Pretražite svih {documentTypes.length} postojećih obrazaca i
+                kategorija.
+              </span>
+            </span>
+          </div>
+
+          <div className="border-t p-4 sm:p-6">
+            <div className="flex flex-col gap-3 lg:flex-row">
+              <label className="flex h-10 flex-1 items-center gap-2 rounded-xl border px-3">
+                <Search className="size-4 text-muted-foreground" />
+                <span className="sr-only">Pretražite dokumente</span>
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Pretražite dokumente…"
+                  className="min-w-0 flex-1 bg-transparent text-sm outline-none"
+                />
+              </label>
+              <div className="flex gap-1.5 overflow-x-auto">
+                {filters.map((id) => (
+                  <button
+                    key={id}
+                    onClick={() => setCategory(id)}
+                    className={`shrink-0 rounded-full border px-3 py-2 text-xs ${
+                      category === id
+                        ? "bg-blue-600 text-white"
+                        : "hover:border-blue-300"
+                    }`}
+                  >
+                    {id === "all" ? "Sve" : labels[id]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {items.map((type) => {
+                const definition = documentTypeDefinitions[type];
+                return (
+                  <button
+                    key={type}
+                    onClick={() => onOpen(type)}
+                    className="group/card flex items-center gap-3 rounded-xl border p-3 text-left transition hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950"
+                  >
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950">
+                      <FileText className="size-4" />
+                    </span>
+                    <span className="min-w-0">
+                      <b className="block truncate text-sm">
+                        {definition.label}
+                      </b>
+                      <span className="block truncate text-[11px] text-muted-foreground">
+                        {labels[categoryForDocument(type)]}
+                      </span>
+                    </span>
+                    <ArrowRight className="ml-auto size-3.5 text-muted-foreground transition group-hover/card:translate-x-1" />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
