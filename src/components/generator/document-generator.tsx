@@ -295,9 +295,10 @@ export function DocumentGenerator({
                 document={liveDocument}
                 onChange={updateVisibility}
               />
-              {type === "invoice" ? (
+              {type === "invoice" || type === "proforma" ? (
                 <InvoiceForm
                   key={type}
+                  mode={type}
                   locale={locale}
                   onPreview={() => setModal(true)}
                   onLiveChange={updateLive}

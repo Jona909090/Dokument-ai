@@ -110,6 +110,11 @@ export type InvoicePayment = {
   reference: string;
   note: string;
 };
+export type ProformaInstallment = {
+  id: string; name: string; percentage: number; amount: number; dueDate: string;
+  activationCondition: string; note: string;
+  status: "planirana" | "dospjela" | "plaćena" | "otkazana"; visible: boolean;
+};
 export type InvoiceBlock = {
   id: string;
   title: string;
@@ -141,6 +146,13 @@ export type InvoiceData = {
   language: "hr" | "en";
   status: InvoiceStatus;
   type: InvoiceType;
+  displayTitle: string;
+  disclaimer: string;
+  showDisclaimer: boolean;
+  validUntil: string;
+  expectedPaymentDate: string;
+  paymentPlanMode: "full" | "percentage" | "fixed" | "installments";
+  installments: ProformaInstallment[];
   customerReference: string;
   customerOrderNumber: string;
   project: string;
@@ -300,6 +312,12 @@ export function calculateInvoice(data: InvoiceData): InvoiceSummary {
         : "plaćena";
   return summary;
 }
+export function calculateProformaPayment(data: InvoiceData) {
+  const totalCents = calculateInvoice(data).totalCents;
+  const installmentCents = data.installments.filter((value) => value.visible).reduce((sum, value) => sum + cents(value.amount), 0);
+  const dueCents = data.paymentPlanMode === "percentage" ? Math.round(totalCents * rate(data.advancePercentage) / 100) : data.paymentPlanMode === "fixed" ? cents(data.advanceAmount) : data.paymentPlanMode === "installments" ? installmentCents : totalCents;
+  return { totalCents, dueCents, remainingCents: totalCents - dueCents, installmentCents, installmentsMatch: data.paymentPlanMode !== "installments" || installmentCents === totalCents };
+}
 export function suggestedLegalNote(mode: InvoiceTaxMode) {
   return (
     {
@@ -384,6 +402,13 @@ export function createInvoiceData(): InvoiceData {
       visible,
     },
     customer: party(),
+    displayTitle: "Faktura",
+    disclaimer: "",
+    showDisclaimer: false,
+    validUntil: "",
+    expectedPaymentDate: "",
+    paymentPlanMode: "full",
+    installments: [],
     headerLayout: "logo-left",
     template: "classic",
     number: `RAC-${year}-001`,

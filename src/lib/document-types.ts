@@ -1,6 +1,7 @@
 export const documentTypes = [
   "cv",
   "invoice",
+  "proforma",
   "offer",
   "contract",
   "request",
@@ -21,6 +22,7 @@ export type DocumentTypeDefinition = {
 export const documentTypeDefinitions: Record<DocumentType, DocumentTypeDefinition> = {
   cv: { label: "CV", description: "Predstavite iskustvo, obrazovanje i vještine." },
   invoice: { label: "Faktura", description: "Unesite izdavatelja, kupca, stavke i porezne podatke." },
+  proforma: { label: "Predračun", description: "Pripremite zahtjev za uplatu, avans ili raspored rata." },
   offer: { label: "Ponuda", description: "Pripremite jasnu ponudu s automatskim izračunom." },
   contract: { label: "Ugovor", description: "Definirajte ugovorne strane, predmet i uvjete." },
   request: { label: "Zahtjev / molba", description: "Sastavite formalni zahtjev primatelju." },
@@ -33,8 +35,9 @@ export const documentTypeDefinitions: Record<DocumentType, DocumentTypeDefinitio
 
 const detectionRules: Array<{ type: DocumentType; keywords: string[] }> = [
   { type: "cv", keywords: ["cv", "životopis", "zivotopis", "biografij"] },
+  { type: "proforma", keywords: ["predračun", "predracun", "proforma", "zahtjev za uplatu"] },
   { type: "invoice", keywords: ["faktur", "račun", "racun"] },
-  { type: "offer", keywords: ["ponud", "predračun", "predracun"] },
+  { type: "offer", keywords: ["ponud"] },
   { type: "contract", keywords: ["ugovor"] },
   { type: "request", keywords: ["zahtjev", "zahtev", "molb", "godišnji odmor", "godisnji odmor"] },
   { type: "termination", keywords: ["otkaz"] },

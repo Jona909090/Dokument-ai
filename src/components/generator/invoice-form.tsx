@@ -46,6 +46,7 @@ import {
 
 type Props = {
   locale: DocumentLocale;
+  mode?: "invoice" | "proforma";
   onPreview: (document: GeneratedDocument) => void;
   onLiveChange?: (document: GeneratedDocument) => void;
 };
@@ -64,7 +65,23 @@ const clone = <T extends { id: string }>(value: T): T => ({
   id: crypto.randomUUID(),
 });
 
-export function InvoiceForm({ locale, onPreview, onLiveChange }: Props) {
+function initialInvoice(mode: "invoice" | "proforma") {
+  const data = createInvoiceData();
+  if (mode === "proforma") {
+    const year = data.issueDate.slice(0, 4);
+    data.type = "proforma";
+    data.displayTitle = "Predračun";
+    data.disclaimer = "Ovaj dokument nije fiskalni račun.";
+    data.showDisclaimer = true;
+    data.number = `PRE-${year}-001`;
+    data.numberFormat = "PRE-{YYYY}-{NNN}";
+    data.validUntil = data.dueDate;
+    data.expectedPaymentDate = data.dueDate;
+    data.payment.description = "Uplata po predračunu";
+  }
+  return data;
+}
+export function InvoiceForm({ locale, mode = "invoice", onPreview, onLiveChange }: Props) {
   const repositories = useRepositories();
   const { user } = useLocalSession();
   const companyProfile = useMemo(
@@ -75,7 +92,7 @@ export function InvoiceForm({ locale, onPreview, onLiveChange }: Props) {
     () => repositories?.contacts.list(user.id) ?? [],
     [repositories, user.id],
   );
-  const [data, setData] = useState<InvoiceData>(createInvoiceData);
+  const [data, setData] = useState<InvoiceData>(() => initialInvoice(mode));
   const [contactQuery, setContactQuery] = useState("");
   const [catalog, setCatalog] = useState<CatalogItem[]>(listCatalogItems);
   const [catalogQuery, setCatalogQuery] = useState("");
@@ -136,12 +153,12 @@ export function InvoiceForm({ locale, onPreview, onLiveChange }: Props) {
   const summary = useMemo(() => calculateInvoice(data), [data]);
   const generated = useMemo<GeneratedDocument>(
     () => ({
-      type: "invoice",
+      type: mode,
       title:
         data.type === "storno"
           ? "STORNO FAKTURA"
           : data.type === "proforma"
-            ? "PREDRAČUN"
+            ? data.displayTitle || "PREDRAČUN"
             : "Faktura",
       locale: data.language || locale,
       fields: [],
@@ -165,7 +182,7 @@ export function InvoiceForm({ locale, onPreview, onLiveChange }: Props) {
           : undefined,
       },
     }),
-    [companyProfile, data, locale, summary],
+    [companyProfile, data, locale, mode, summary],
   );
   useEffect(() => onLiveChange?.(generated), [generated, onLiveChange]);
   useEffect(() => {
@@ -258,6 +275,17 @@ export function InvoiceForm({ locale, onPreview, onLiveChange }: Props) {
       },
     }));
   };
+  function convertProforma(target: "invoice" | "advance") {
+    const converted: GeneratedDocument = { ...generated, type: "invoice", title: target === "advance" ? "Avansna faktura" : "Faktura", invoice: { ...data, type: target === "advance" ? "avansna" : "standardna", displayTitle: target === "advance" ? "Avansna faktura" : "Faktura", disclaimer: "", showDisclaimer: false } };
+    saveEditorDraft(converted);
+    window.alert(`${converted.title} je lokalno pripremljena kao nova skica. Izvorni predračun nije promijenjen.`);
+  }
+  function importLatestOffer() {
+    const offer = repositories?.documents.list(user.id).find((entry) => entry.documentType === "offer" && entry.content.quotation);
+    if (!offer?.content.quotation) { window.alert("Nema spremljene ponude za lokalnu konverziju."); return; }
+    const quotation = offer.content.quotation;
+    change((current) => ({ ...current, customer: { ...current.customer, ...quotation.customer }, groups: quotation.variants[0]?.groups.map((group) => ({ ...group, items: group.items.map((item) => ({ ...item })) })) ?? current.groups, charges: quotation.charges.map((charge) => ({ ...charge })) }));
+  }
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2 rounded-2xl border bg-muted/40 p-3">
@@ -306,6 +334,8 @@ export function InvoiceForm({ locale, onPreview, onLiveChange }: Props) {
           </Button>
         </div>
       )}
+      {mode === "proforma" && <Section title="Identitet i plaćanje predračuna" open><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"><Select label="Naziv dokumenta" value={data.displayTitle} options={[["Predračun","Predračun"],["Proforma račun","Proforma račun"],["Proforma Invoice","Proforma Invoice"],["Zahtjev za uplatu","Zahtjev za uplatu"]]} onChange={(displayTitle)=>set("displayTitle",displayTitle)}/><Text label="Ručni naziv" value={data.displayTitle} onChange={(displayTitle)=>set("displayTitle",displayTitle)}/><DateField label="Vrijedi do" value={data.validUntil} onChange={(validUntil)=>set("validUntil",validUntil)}/><DateField label="Očekivani datum uplate" value={data.expectedPaymentDate} onChange={(expectedPaymentDate)=>set("expectedPaymentDate",expectedPaymentDate)}/><Select label="Model uplate" value={data.paymentPlanMode} options={[["full","Puni iznos"],["percentage","Avans u postotku"],["fixed","Avans u fiksnom iznosu"],["installments","Više rata"]]} onChange={(paymentPlanMode)=>set("paymentPlanMode",paymentPlanMode as InvoiceData["paymentPlanMode"])}/><Check label="Prikaži upozorenje" checked={data.showDisclaimer} onChange={(showDisclaimer)=>set("showDisclaimer",showDisclaimer)}/></div><textarea className={`${textarea} mt-3`} value={data.disclaimer} onChange={(event)=>set("disclaimer",event.target.value)}/><div className="mt-3 flex flex-wrap gap-2"><Button type="button" variant="outline" onClick={importLatestOffer}>Kreiraj iz ponude</Button><Button type="button" variant="outline" onClick={()=>convertProforma("invoice")}>Pretvori u fakturu</Button><Button type="button" variant="outline" onClick={()=>convertProforma("advance")}>Kreiraj avansnu fakturu</Button></div></Section>}
+      {mode === "proforma" && data.paymentPlanMode === "installments" && <Section title="Rate plaćanja" open><div className="space-y-2">{data.installments.map((installment,index)=><div key={installment.id} className={`grid gap-2 rounded-xl border p-3 sm:grid-cols-2 lg:grid-cols-4 ${installment.visible?"":"bg-muted opacity-70"}`}><Text label="Naziv rate" value={installment.name} onChange={(name)=>set("installments",data.installments.map(v=>v.id===installment.id?{...v,name}:v))}/><NumberField label="Postotak %" value={installment.percentage} onChange={(percentage)=>set("installments",data.installments.map(v=>v.id===installment.id?{...v,percentage}:v))}/><NumberField label="Iznos" value={installment.amount} onChange={(amount)=>set("installments",data.installments.map(v=>v.id===installment.id?{...v,amount}:v))}/><DateField label="Dospijeće" value={installment.dueDate} onChange={(dueDate)=>set("installments",data.installments.map(v=>v.id===installment.id?{...v,dueDate}:v))}/><Text label="Uvjet aktiviranja" value={installment.activationCondition} onChange={(activationCondition)=>set("installments",data.installments.map(v=>v.id===installment.id?{...v,activationCondition}:v))}/><Text label="Napomena" value={installment.note} onChange={(note)=>set("installments",data.installments.map(v=>v.id===installment.id?{...v,note}:v))}/><Select label="Status" value={installment.status} options={["planirana","dospjela","plaćena","otkazana"].map(v=>[v,v])} onChange={(status)=>set("installments",data.installments.map(v=>v.id===installment.id?{...v,status:status as typeof installment.status}:v))}/><div className="flex items-end gap-1"><IconButton label="Sakrij/prikaži" onClick={()=>set("installments",data.installments.map(v=>v.id===installment.id?{...v,visible:!v.visible}:v))}>{installment.visible?<Eye/>:<EyeOff/>}</IconButton><IconButton label="Dupliraj" onClick={()=>set("installments",[...data.installments.slice(0,index+1),clone(installment),...data.installments.slice(index+1)])}><Copy/></IconButton><IconButton label="Gore" onClick={()=>set("installments",move(data.installments,index,-1))}>↑</IconButton><IconButton label="Dolje" onClick={()=>set("installments",move(data.installments,index,1))}>↓</IconButton><IconButton label="Obriši" onClick={()=>set("installments",data.installments.filter(v=>v.id!==installment.id))}><Trash2/></IconButton></div></div>)}</div><Button className="mt-3" type="button" variant="outline" onClick={()=>set("installments",[...data.installments,{id:crypto.randomUUID(),name:`Rata ${data.installments.length+1}`,percentage:0,amount:0,dueDate:data.dueDate,activationCondition:"",note:"",status:"planirana",visible:true}])}><Plus className="size-4"/>Dodaj ratu</Button><p className="mt-2 text-xs text-muted-foreground">Zbroj rata: {data.installments.reduce((sum,v)=>sum+v.amount,0).toFixed(2)} {data.currency} · Ukupno: {(summary.totalCents/100).toFixed(2)} {data.currency}</p></Section>}
       <Section title="Predložak i zaglavlje" open>
         <div className="grid gap-3 sm:grid-cols-3">
           <Select

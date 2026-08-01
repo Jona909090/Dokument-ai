@@ -103,6 +103,7 @@ export function InvoiceSheet({
       : data.type === "proforma"
         ? "PREDRAČUN / PROFORMA"
         : t.invoice;
+  const documentTitle = data.type === "proforma" ? data.displayTitle || title : title;
   return (
     <article
       className={`relative flex min-h-[297mm] w-full flex-col bg-white text-slate-900 ${compact ? "origin-top scale-[.52]" : ""}`}
@@ -164,7 +165,7 @@ export function InvoiceSheet({
             className="text-2xl font-black tracking-tight"
             style={{ color: accent }}
           >
-            {title}
+            {documentTitle}
           </h1>
           <p className="mt-1 text-lg font-bold">{data.number || "—"}</p>
           <p
@@ -202,6 +203,7 @@ export function InvoiceSheet({
           <dd className="text-right font-bold" style={{ color: accent }}>
             {formatDocumentDate(data.dueDate, data.language)}
           </dd>
+          {data.type === "proforma" && data.validUntil && <><dt className="font-bold" style={{ color: accent }}>Vrijedi do</dt><dd className="text-right font-bold" style={{ color: accent }}>{formatDocumentDate(data.validUntil, data.language)}</dd></>}
           <dt className="text-slate-500">{t.service}</dt>
           <dd className="text-right">
             {formatDocumentDate(data.serviceDate, data.language)}
@@ -358,6 +360,8 @@ export function InvoiceSheet({
             <span>{money(summary.remainingCents, data)}</span>
           </div>
         </section>}
+        {data.type === "proforma" && data.showDisclaimer && data.disclaimer && <section className="mt-3 rounded border border-amber-300 bg-amber-50 p-2 text-center text-[9px] font-semibold text-amber-900">{data.disclaimer}</section>}
+        {data.type === "proforma" && data.installments.filter((value) => value.visible).length > 0 && <section className="mt-4 break-inside-avoid text-[9px]"><h3 className="font-bold">RASPORED PLAĆANJA</h3>{data.installments.filter((value) => value.visible).map((value) => <div key={value.id} className="grid grid-cols-4 border-b py-1"><span>{value.name}</span><span>{value.percentage}%</span><span>{money(Math.round(value.amount * 100), data)}</span><span>{formatDocumentDate(value.dueDate, data.language)}</span></div>)}</section>}
         {data.showLegalNote && data.legalNote && (
           <section
             className="mt-4 break-inside-avoid rounded border-l-4 bg-slate-50 p-3 text-[9px]"

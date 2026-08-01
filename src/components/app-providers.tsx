@@ -10,6 +10,7 @@ import { LocalSessionProvider } from "@/components/session/local-session-provide
 const commands: Array<{ type: DocumentType; keywords: string }> = [
   { type: "cv", keywords: "cv životopis" },
   { type: "invoice", keywords: "faktura račun" },
+  { type: "proforma", keywords: "predračun proforma zahtjev uplata" },
   { type: "offer", keywords: "ponuda predračun" },
   { type: "purchase-order", keywords: "narudžbenica" },
   { type: "contract", keywords: "ugovor" },

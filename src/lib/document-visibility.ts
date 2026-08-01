@@ -104,6 +104,8 @@ const documentFields = [
   "orderNumber",
   "issueDate",
   "dueDate",
+  "validUntil",
+  "expectedPaymentDate",
   "serviceDate",
   "issuePlace",
   "desiredDeliveryDate",
@@ -113,6 +115,10 @@ const documentFields = [
   "paymentMethod",
   "currency",
   "reference",
+  "customerReference",
+  "customerOrderNumber",
+  "displayTitle",
+  "disclaimer",
   "project",
   "site",
   "responsiblePerson",
@@ -252,6 +258,9 @@ export function buildVisibleDocumentModel(
     document.images = { ...document.images, stamp: undefined };
   if (document.invoice) {
     const data = document.invoice;
+    for (const key of documentFields)
+      if (key in data && !isFieldVisible(settings, "document", key))
+        (data as unknown as Record<string, unknown>)[key] = "";
     data.company = blankHidden(
       data.company as unknown as Record<string, unknown>,
       settings,
@@ -296,7 +305,10 @@ export function buildVisibleDocumentModel(
         deadline: "",
         showCodePlaceholder: false,
       };
-    if (!isSectionVisible(settings, "payments")) data.payments = [];
+    if (!isSectionVisible(settings, "payments")) {
+      data.payments = [];
+      data.installments = [];
+    }
     if (!isSectionVisible(settings, "taxNotes")) data.showLegalNote = false;
     if (!isSectionVisible(settings, "notes")) data.note = "";
     if (!isSectionVisible(settings, "blocks")) data.blocks = [];

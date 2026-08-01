@@ -8,7 +8,7 @@ export const templateGroups: Array<{ id: TemplateGroup; label: string; descripti
   { id: "construction", label: "Građevina", description: "Ponude, narudžbenice i zapisnici", types: ["offer", "purchase-order", "minutes"] },
   { id: "administration", label: "Administracija", description: "Zahtjevi, potvrde i pisma", types: ["request", "certificate", "business-letter"] },
   { id: "legal", label: "Pravni", description: "Ugovori i službene izjave", types: ["contract", "termination"] },
-  { id: "finance", label: "Financije", description: "Fakture i poslovne ponude", types: ["invoice", "offer"] },
+  { id: "finance", label: "Financije", description: "Fakture, predračuni i poslovne ponude", types: ["invoice", "proforma", "offer"] },
   { id: "hr", label: "HR", description: "CV, ugovori i otkazi", types: ["cv", "contract", "termination"] },
   { id: "personal", label: "Privatni", description: "Molbe, potvrde i pisma", types: ["request", "certificate", "business-letter"] },
 ];
@@ -19,6 +19,13 @@ const common: Record<string, WizardQuestion> = {
 };
 
 export const wizardQuestions: Record<DocumentType, WizardQuestion[]> = {
+  proforma: [
+    { id: "company", question: "Kako se zove izdavatelj predračuna?", label: "Naziv firme", placeholder: "npr. Gradnja d.o.o.", required: true },
+    { id: "buyer", question: "Tko je kupac?", label: "Kupac", placeholder: "Naziv ili ime kupca", required: true },
+    common.date,
+    { id: "number", question: "Koji je broj predračuna?", label: "Broj predračuna", placeholder: "PRE-2026-001", required: true },
+    { id: "items", question: "Koje stavke uključujemo?", label: "Stavke", placeholder: "Svaka stavka u novom redu", type: "multiline", required: true },
+  ],
   invoice: [
     { id: "company", question: "Kako se zove firma koja izdaje fakturu?", label: "Naziv firme", placeholder: "npr. Gradnja d.o.o.", required: true },
     { id: "companyTaxId", question: "Koji je OIB ili porezni broj firme?", label: "OIB / porezni broj", placeholder: "Unesite porezni broj", required: true },

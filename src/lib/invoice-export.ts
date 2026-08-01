@@ -45,7 +45,7 @@ function title(data: InvoiceData) {
   return data.type === "storno"
     ? "STORNO FAKTURA"
     : data.type === "proforma"
-      ? "PREDRAČUN / PROFORMA"
+      ? data.displayTitle || "PREDRAČUN / PROFORMA"
       : data.language === "en"
         ? "INVOICE"
         : "FAKTURA";
@@ -273,6 +273,8 @@ export async function downloadInvoicePdf(document: GeneratedDocument) {
     layout: "lightHorizontalLines",
     margin: [325, 12, 0, 0],
   });
+  if (data.type === "proforma" && data.showDisclaimer && data.disclaimer) content.push({ text: data.disclaimer, bold: true, color: "#92400e", fillColor: "#fffbeb", alignment: "center", margin: [0, 10, 0, 0] });
+  if (data.type === "proforma" && data.installments.some((value) => value.visible)) content.push({ text: `RASPORED PLAĆANJA\n${data.installments.filter((value) => value.visible).map((value) => `${value.name} · ${value.percentage}% · ${money(Math.round(value.amount * 100), data)} · ${formatDocumentDate(value.dueDate, data.language)}`).join("\n")}`, margin: [0, 10, 0, 0], unbreakable: true });
   if (data.showLegalNote && data.legalNote)
     content.push({
       stack: [
@@ -549,6 +551,8 @@ export async function downloadInvoiceDocx(document: GeneratedDocument) {
     children.push(
       new Table({ width: { size: 9360, type: WidthType.DXA }, rows }),
     );
+  if (data.type === "proforma" && data.showDisclaimer && data.disclaimer) children.push(p(data.disclaimer, true));
+  if (data.type === "proforma" && data.installments.some((value) => value.visible)) children.push(p(`RASPORED PLAĆANJA\n${data.installments.filter((value) => value.visible).map((value) => `${value.name} · ${value.percentage}% · ${money(Math.round(value.amount * 100), data)} · ${formatDocumentDate(value.dueDate, data.language)}`).join("\n")}`, true));
   }
   if (data.showFinancials !== false) children.push(
     new Paragraph({
