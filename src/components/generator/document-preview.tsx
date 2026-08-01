@@ -21,6 +21,7 @@ import { buildVisibleDocumentModel } from "@/lib/document-visibility";
 import { DailyReportSheet } from "@/components/generator/daily-report-sheet";
 import { CompletedWorksReportSheet } from "@/components/generator/completed-works-report-sheet";
 import { WorkHandoverSheet } from "@/components/generator/work-handover-sheet";
+import { TemplateSurface } from "@/components/templates/template-surface";
 
 const euro = new Intl.NumberFormat("hr-HR", {
   style: "currency",
@@ -185,7 +186,7 @@ export function DocumentPreview({
           </div>
         )}
 
-        {visibleDocument.workHandover ? (
+        <TemplateSurface type={document.type}>{visibleDocument.workHandover ? (
           <div className="mx-auto max-w-[210mm] shadow-2xl"><WorkHandoverSheet data={visibleDocument.workHandover} /></div>
         ) : visibleDocument.completedWorksReport ? (
           <div className="mx-auto max-w-[210mm] shadow-2xl"><CompletedWorksReportSheet data={visibleDocument.completedWorksReport} /></div>
@@ -353,7 +354,7 @@ export function DocumentPreview({
               <span>1</span>
             </footer>
           </article>
-        )}
+        )}</TemplateSurface>
       </div>
     </div>
   );

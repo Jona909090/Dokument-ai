@@ -6,6 +6,7 @@ import { FileText, Moon, Search, Sun, X } from "lucide-react";
 
 import { documentTypeDefinitions, type DocumentType } from "@/lib/document-types";
 import { LocalSessionProvider } from "@/components/session/local-session-provider";
+import { TemplateProvider } from "@/components/templates/template-provider";
 
 const commands: Array<{ type: DocumentType; keywords: string }> = [
   { type: "cv", keywords: "cv životopis" },
@@ -55,7 +56,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   const filtered = commands.filter(({ type, keywords }) => `${documentTypeDefinitions[type].label} ${keywords}`.toLocaleLowerCase("hr").includes(query.toLocaleLowerCase("hr")));
 
   return <>
-    <LocalSessionProvider>{children}</LocalSessionProvider>
+    <TemplateProvider><LocalSessionProvider>{children}</LocalSessionProvider></TemplateProvider>
     <button type="button" onClick={toggleTheme} className="fixed bottom-5 right-5 z-50 flex size-11 items-center justify-center rounded-full border bg-background text-foreground shadow-lg transition hover:-translate-y-1 hover:shadow-xl focus-visible:outline-2 focus-visible:outline-offset-2" aria-label={dark ? "Uključi svijetli način" : "Uključi tamni način"}>
       {dark ? <Sun className="size-5" /> : <Moon className="size-5" />}
     </button>
