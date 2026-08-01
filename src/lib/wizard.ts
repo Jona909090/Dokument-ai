@@ -5,7 +5,7 @@ export type TemplateGroup = "construction" | "administration" | "legal" | "finan
 export type WizardQuestion = { id: string; question: string; label: string; placeholder: string; required?: boolean; type?: "text" | "date" | "email" | "multiline" };
 
 export const templateGroups: Array<{ id: TemplateGroup; label: string; description: string; types: DocumentType[] }> = [
-  { id: "construction", label: "Građevina", description: "Ponude, narudžbenice i zapisnici", types: ["offer", "purchase-order", "minutes"] },
+  { id: "construction", label: "Građevina", description: "Ponude, narudžbenice i gradilišni izvještaji", types: ["offer", "purchase-order", "daily-report", "minutes"] },
   { id: "administration", label: "Administracija", description: "Zahtjevi, potvrde i pisma", types: ["request", "certificate", "business-letter"] },
   { id: "legal", label: "Pravni", description: "Ugovori i službene izjave", types: ["contract", "termination"] },
   { id: "finance", label: "Financije", description: "Fakture, predračuni i poslovne ponude", types: ["invoice", "proforma", "offer"] },
@@ -19,6 +19,13 @@ const common: Record<string, WizardQuestion> = {
 };
 
 export const wizardQuestions: Record<DocumentType, WizardQuestion[]> = {
+  "daily-report": [
+    { id: "project", question: "Koji je naziv projekta?", label: "Projekt", placeholder: "Naziv projekta", required: true },
+    { id: "site", question: "Koje je gradilište?", label: "Gradilište", placeholder: "Naziv i adresa", required: true },
+    common.date,
+    { id: "manager", question: "Tko vodi gradilište?", label: "Voditelj gradilišta", placeholder: "Ime i prezime" },
+    { id: "works", question: "Koji su radovi izvedeni?", label: "Izvedeni radovi", placeholder: "Opišite današnje radove", type: "multiline", required: true },
+  ],
   proforma: [
     { id: "company", question: "Kako se zove izdavatelj predračuna?", label: "Naziv firme", placeholder: "npr. Gradnja d.o.o.", required: true },
     { id: "buyer", question: "Tko je kupac?", label: "Kupac", placeholder: "Naziv ili ime kupca", required: true },

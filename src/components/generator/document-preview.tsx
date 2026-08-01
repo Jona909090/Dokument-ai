@@ -18,6 +18,7 @@ import { PurchaseOrderSheet } from "@/components/generator/purchase-order-sheet"
 import { QuotationSheet } from "@/components/generator/quotation-sheet";
 import { InvoiceSheet } from "@/components/generator/invoice-sheet";
 import { buildVisibleDocumentModel } from "@/lib/document-visibility";
+import { DailyReportSheet } from "@/components/generator/daily-report-sheet";
 
 const euro = new Intl.NumberFormat("hr-HR", {
   style: "currency",
@@ -182,7 +183,9 @@ export function DocumentPreview({
           </div>
         )}
 
-        {visibleDocument.invoice ? (
+        {visibleDocument.dailyReport ? (
+          <div className="mx-auto max-w-[210mm] shadow-2xl"><DailyReportSheet data={visibleDocument.dailyReport} /></div>
+        ) : visibleDocument.invoice ? (
           <div className="mx-auto max-w-[210mm] shadow-2xl">
             <InvoiceSheet data={visibleDocument.invoice} images={visibleDocument.images} />
           </div>

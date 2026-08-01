@@ -20,6 +20,7 @@ import { QuotationForm } from "@/components/generator/quotation-form";
 import { DocumentPreview } from "@/components/generator/document-preview";
 import { InlineA4Preview } from "@/components/generator/inline-a4-preview";
 import { DocumentVisibilityPanel } from "@/components/generator/visibility-controls";
+import { DailyReportForm } from "@/components/generator/daily-report-form";
 import { Button } from "@/components/ui/button";
 import {
   documentTypeDefinitions,
@@ -295,7 +296,9 @@ export function DocumentGenerator({
                 document={liveDocument}
                 onChange={updateVisibility}
               />
-              {type === "invoice" || type === "proforma" ? (
+              {type === "daily-report" ? (
+                <DailyReportForm key={type} locale={locale} onPreview={() => setModal(true)} onLiveChange={updateLive} />
+              ) : type === "invoice" || type === "proforma" ? (
                 <InvoiceForm
                   key={type}
                   mode={type}

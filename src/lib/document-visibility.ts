@@ -57,6 +57,7 @@ export const sectionLabels: Record<string, string> = {
   acceptance: "Prihvat ponude",
   payments: "Evidencija uplata",
   taxNotes: "Porezne napomene",
+  weather: "Vrijeme", workforce: "Radnici", completedWorks: "Izvedeni radovi", plannedWorks: "Planirani radovi", materials: "Materijal", equipment: "Strojevi", deliveries: "Dostave", problems: "Problemi i zastoji", quality: "Kvaliteta", safety: "Sigurnost", visitors: "Posjetitelji", meetings: "Sastanci", photos: "Fotografije", attachments: "Prilozi", custom: "Prilagođene sekcije",
 };
 const columnDefaults: ColumnVisibility[] = [
   ["index", "Redni broj"],
@@ -149,6 +150,9 @@ export function createDefaultVisibility(
     payments: section(),
     taxNotes: section(),
   };
+  if (document?.dailyReport)
+    for (const id of Object.keys(document.dailyReport.sections))
+      sections[id] = section();
   return {
     version: 1,
     profileId: "full",
@@ -416,6 +420,17 @@ export function buildVisibleDocumentModel(
       data.includeSavedSignature && isSectionVisible(settings, "signatures");
     data.includeStamp =
       data.includeStamp && isSectionVisible(settings, "stamp");
+  }
+  if (document.dailyReport) {
+    const data = document.dailyReport;
+    for (const [id, values] of Object.entries(data.sections))
+      data.sections[id as keyof typeof data.sections] = isSectionVisible(settings, id)
+        ? values.map((value) => ({ ...value, visible: settings.items[value.id]?.isVisible ?? value.visible, includeInStatistics: settings.items[value.id]?.includeInCalculation ?? value.includeInStatistics }))
+        : [];
+    data.photos = isSectionVisible(settings, "photos")
+      ? data.photos.map((photo) => ({ ...photo, visible: settings.items[photo.id]?.isVisible ?? photo.visible }))
+      : [];
+    if (!isSectionVisible(settings, "safety")) data.showSafetyDisclaimer = false;
   }
   return document;
 }

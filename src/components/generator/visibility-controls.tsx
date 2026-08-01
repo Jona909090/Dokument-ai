@@ -248,6 +248,10 @@ export function DocumentVisibilityPanel({
     listVisibilityProfiles,
   );
   const [profileName, setProfileName] = useState("");
+  const dailyReport = document.dailyReport;
+  const fallbackEntries = dailyReport
+    ? [...Object.values(dailyReport.sections).flat().map((value) => [value.id, value.title] as const), ...dailyReport.photos.map((value) => [value.id, value.title] as const)]
+    : (document.items?.map((item, index) => [String(index), item.description] as const) ?? []);
   const itemEntries =
     document.invoice?.groups.flatMap((g) =>
       g.items.map((i) => [i.id, i.name] as const),
@@ -256,10 +260,7 @@ export function DocumentVisibilityPanel({
       v.groups.flatMap((g) => g.items.map((i) => [i.id, i.name] as const)),
     ) ??
     document.purchaseOrder?.items.map((i) => [i.id, i.name] as const) ??
-    document.items?.map(
-      (i, index) => [String(index), i.description] as const,
-    ) ??
-    [];
+    fallbackEntries;
   const groupEntries =
     document.invoice?.groups.map((group) => [group.id, group.name] as const) ??
     document.quotation?.variants.flatMap((variant) =>

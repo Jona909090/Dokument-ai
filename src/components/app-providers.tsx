@@ -13,6 +13,7 @@ const commands: Array<{ type: DocumentType; keywords: string }> = [
   { type: "proforma", keywords: "predračun proforma zahtjev uplata" },
   { type: "offer", keywords: "ponuda predračun" },
   { type: "purchase-order", keywords: "narudžbenica" },
+  { type: "daily-report", keywords: "dnevni izvještaj gradilište građevinski dnevnik" },
   { type: "contract", keywords: "ugovor" },
 ];
 
