@@ -1,5 +1,6 @@
 import type { DocumentType } from "@/lib/document-types";
 import type { GeneratedDocument } from "@/lib/generated-document";
+import { completedWorksFields } from "@/lib/completed-works-report";
 
 export type FieldVisibility = { isVisible: boolean };
 export type SectionVisibility = {
@@ -58,6 +59,7 @@ export const sectionLabels: Record<string, string> = {
   payments: "Evidencija uplata",
   taxNotes: "Porezne napomene",
   weather: "Vrijeme", workforce: "Radnici", completedWorks: "Izvedeni radovi", plannedWorks: "Planirani radovi", materials: "Materijal", equipment: "Strojevi", deliveries: "Dostave", problems: "Problemi i zastoji", quality: "Kvaliteta", safety: "Sigurnost", visitors: "Posjetitelji", meetings: "Sastanci", photos: "Fotografije", attachments: "Prilozi", custom: "Prilagođene sekcije",
+  intro: "Uvodni tekst", phases: "Faze", works: "Izvedeni radovi", additionalWorks: "Dodatni radovi", defects: "Nedostaci", deductions: "Odbici", conclusion: "Zaključak",
 };
 const columnDefaults: ColumnVisibility[] = [
   ["index", "Redni broj"],
@@ -124,6 +126,23 @@ const documentFields = [
   "site",
   "responsiblePerson",
   "status",
+  "issueDate",
+  "periodFrom",
+  "periodTo",
+  "projectName",
+  "siteName",
+  "siteAddress",
+  "investor",
+  "customer",
+  "mainContractor",
+  "subcontractor",
+  "supervision",
+  "siteManager",
+  "foreman",
+  "contractNumber",
+  "workOrderNumber",
+  "offerNumber",
+  "projectPhase",
 ];
 
 export function createDefaultVisibility(
@@ -153,6 +172,13 @@ export function createDefaultVisibility(
   if (document?.dailyReport)
     for (const id of Object.keys(document.dailyReport.sections))
       sections[id] = section();
+  if (document?.completedWorksReport)
+    for (const id of [...Object.keys(document.completedWorksReport.sections), "phases", "photos"])
+      sections[id] = section(
+        id in completedWorksFields
+          ? completedWorksFields[id as keyof typeof completedWorksFields].map(fieldId)
+          : [],
+      );
   return {
     version: 1,
     profileId: "full",
@@ -431,6 +457,23 @@ export function buildVisibleDocumentModel(
       ? data.photos.map((photo) => ({ ...photo, visible: settings.items[photo.id]?.isVisible ?? photo.visible }))
       : [];
     if (!isSectionVisible(settings, "safety")) data.showSafetyDisclaimer = false;
+  }
+  if (document.completedWorksReport) {
+    const data = document.completedWorksReport;
+    const basic = data as unknown as Record<string, unknown>;
+    for (const key of documentFields)
+      if (key in basic && !isFieldVisible(settings, "document", key)) basic[key] = "";
+    for (const [id, values] of Object.entries(data.sections))
+      data.sections[id as keyof typeof data.sections] = isSectionVisible(settings, id)
+        ? values.map((value) => ({ ...value, fields: Object.fromEntries(Object.entries(value.fields).map(([key, field]) => [key, isFieldVisible(settings, id, fieldId(key)) ? field : ""])), visible: settings.items[value.id]?.isVisible ?? value.visible, includeInStatistics: settings.items[value.id]?.includeInCalculation ?? value.includeInStatistics }))
+        : [];
+    data.phases = isSectionVisible(settings, "phases")
+      ? data.phases.map((value) => ({ ...value, visible: settings.items[value.id]?.isVisible ?? value.visible }))
+      : [];
+    data.photos = isSectionVisible(settings, "photos")
+      ? data.photos.map((value) => ({ ...value, visible: settings.items[value.id]?.isVisible ?? value.visible }))
+      : [];
+    data.showFinancials = data.showFinancials && isSectionVisible(settings, "financials");
   }
   return document;
 }

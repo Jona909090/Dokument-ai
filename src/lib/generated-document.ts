@@ -4,6 +4,7 @@ import type { QuotationData } from "@/lib/quotation";
 import type { InvoiceData } from "@/lib/invoice";
 import type { DocumentVisibilitySettings } from "@/lib/document-visibility";
 import type { DailyReportData } from "@/lib/daily-report";
+import type { CompletedWorksReportData } from "@/lib/completed-works-report";
 
 export type DocumentLocale = "hr" | "en";
 
@@ -46,6 +47,7 @@ export type GeneratedDocument = {
   invoice?: InvoiceData;
   visibility?: DocumentVisibilitySettings;
   dailyReport?: DailyReportData;
+  completedWorksReport?: CompletedWorksReportData;
 };
 
 export function formatDocumentDate(value: string, locale: DocumentLocale) {

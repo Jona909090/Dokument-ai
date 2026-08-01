@@ -21,6 +21,7 @@ export default async function WizardPage({
     typeValue === "invoice"
     || typeValue === "proforma"
     || typeValue === "daily-report"
+    || typeValue === "completed-works-report"
   )
     return (
       <DocumentGenerator initialType={typeValue} originalPrompt={prompt} />

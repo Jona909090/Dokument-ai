@@ -11,6 +11,7 @@ export const documentTypes = [
   "certificate",
   "business-letter",
   "daily-report",
+  "completed-works-report",
 ] as const;
 
 export type DocumentType = (typeof documentTypes)[number];
@@ -33,6 +34,7 @@ export const documentTypeDefinitions: Record<DocumentType, DocumentTypeDefinitio
   certificate: { label: "Potvrda", description: "Unesite izdavatelja, primatelja i svrhu potvrde." },
   "business-letter": { label: "Poslovno pismo", description: "Pripremite strukturirano poslovno obraćanje." },
   "daily-report": { label: "Dnevni izvještaj sa gradilišta", description: "Evidentirajte radnike, radove, materijal, strojeve, probleme i fotografije." },
+  "completed-works-report": { label: "Izvještaj o izvedenim radovima", description: "Pratite faze, količine, dokaze, kvalitetu i vrijednost izvedenih radova." },
 };
 
 const detectionRules: Array<{ type: DocumentType; keywords: string[] }> = [
@@ -48,6 +50,7 @@ const detectionRules: Array<{ type: DocumentType; keywords: string[] }> = [
   { type: "certificate", keywords: ["potvrd"] },
   { type: "business-letter", keywords: ["poslovno pismo", "poslovni email", "poslovni e-mail", "dopis"] },
   { type: "daily-report", keywords: ["dnevni izvještaj", "dnevni izvjestaj", "građevinski dnevnik", "gradilisni dnevnik", "gradilišni dnevnik"] },
+  { type: "completed-works-report", keywords: ["izvještaj o izvedenim radovima", "izvjestaj o izvedenim radovima", "izvedeni radovi"] },
 ];
 
 export function detectDocumentType(input: string): DocumentType | null {

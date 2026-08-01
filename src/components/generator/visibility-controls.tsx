@@ -249,7 +249,10 @@ export function DocumentVisibilityPanel({
   );
   const [profileName, setProfileName] = useState("");
   const dailyReport = document.dailyReport;
-  const fallbackEntries = dailyReport
+  const completedWorksReport = document.completedWorksReport;
+  const fallbackEntries = completedWorksReport
+    ? [...Object.values(completedWorksReport.sections).flat().map((value) => [value.id, value.title] as const), ...completedWorksReport.phases.map((value) => [value.id, value.title] as const), ...completedWorksReport.photos.map((value) => [value.id, value.title] as const)]
+    : dailyReport
     ? [...Object.values(dailyReport.sections).flat().map((value) => [value.id, value.title] as const), ...dailyReport.photos.map((value) => [value.id, value.title] as const)]
     : (document.items?.map((item, index) => [String(index), item.description] as const) ?? []);
   const itemEntries =

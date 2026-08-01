@@ -14,6 +14,7 @@ const commands: Array<{ type: DocumentType; keywords: string }> = [
   { type: "offer", keywords: "ponuda predračun" },
   { type: "purchase-order", keywords: "narudžbenica" },
   { type: "daily-report", keywords: "dnevni izvještaj gradilište građevinski dnevnik" },
+  { type: "completed-works-report", keywords: "izvještaj izvedeni radovi količine gradilište" },
   { type: "contract", keywords: "ugovor" },
 ];
 

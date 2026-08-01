@@ -21,6 +21,7 @@ import { DocumentPreview } from "@/components/generator/document-preview";
 import { InlineA4Preview } from "@/components/generator/inline-a4-preview";
 import { DocumentVisibilityPanel } from "@/components/generator/visibility-controls";
 import { DailyReportForm } from "@/components/generator/daily-report-form";
+import { CompletedWorksReportForm } from "@/components/generator/completed-works-report-form";
 import { Button } from "@/components/ui/button";
 import {
   documentTypeDefinitions,
@@ -296,7 +297,9 @@ export function DocumentGenerator({
                 document={liveDocument}
                 onChange={updateVisibility}
               />
-              {type === "daily-report" ? (
+              {type === "completed-works-report" ? (
+                <CompletedWorksReportForm key={type} locale={locale} onPreview={() => setModal(true)} onLiveChange={updateLive} />
+              ) : type === "daily-report" ? (
                 <DailyReportForm key={type} locale={locale} onPreview={() => setModal(true)} onLiveChange={updateLive} />
               ) : type === "invoice" || type === "proforma" ? (
                 <InvoiceForm

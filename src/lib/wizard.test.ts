@@ -3,7 +3,7 @@ import { buildWizardDocument, templateGroups, wizardQuestions } from "./wizard";
 
 describe("local smart wizard", () => {
   it("svaki tip dokumenta ima strukturirana pitanja", () => {
-    expect(Object.keys(wizardQuestions)).toHaveLength(12);
+    expect(Object.keys(wizardQuestions)).toHaveLength(13);
     for (const questions of Object.values(wizardQuestions)) {
       expect(questions.length).toBeGreaterThanOrEqual(5);
       expect(questions.some((question) => question.required)).toBe(true);
