@@ -1,15 +1,124 @@
 "use client";
-
 import { Download, Eye, FileText } from "lucide-react";
 import { PurchaseOrderSheet } from "@/components/generator/purchase-order-sheet";
+import { QuotationSheet } from "@/components/generator/quotation-sheet";
 import { Button } from "@/components/ui/button";
 import { downloadDocx, downloadPdf } from "@/lib/document-export";
-import { formatDocumentDate, type GeneratedDocument } from "@/lib/generated-document";
+import {
+  formatDocumentDate,
+  type GeneratedDocument,
+} from "@/lib/generated-document";
 import { categoryForDocument, trackEvent } from "@/lib/analytics/service";
-
-export function InlineA4Preview({ document, onExpand }: { document: GeneratedDocument; onExpand: () => void }) {
-  async function exportDocument(format: "pdf" | "docx") { if (format === "pdf") await downloadPdf(document); else await downloadDocx(document); trackEvent(format === "pdf" ? "document_exported_pdf" : "document_exported_docx", { document_type: document.type, document_category: categoryForDocument(document.type), language: document.locale }); }
-  return <div className="sticky top-20"><div className="mb-3 flex items-center justify-between"><div><p className="text-sm font-semibold">Live A4 preview</p><p className="text-xs text-muted-foreground">Ažurira se dok pišete</p></div><span className="flex items-center gap-1 text-xs text-emerald-600"><span className="size-2 animate-pulse rounded-full bg-emerald-500" /> Uživo</span></div><div className="aspect-[210/297] w-full overflow-hidden rounded-xl border bg-white shadow-2xl transition-all duration-300">{document.purchaseOrder ? <PurchaseOrderSheet data={document.purchaseOrder} images={document.images} compact /> : <GenericSheet document={document} />}</div><div className="mt-4 grid grid-cols-3 gap-2"><Button size="sm" variant="outline" onClick={onExpand}><Eye className="size-3.5" /> Pregled</Button><Button size="sm" variant="outline" onClick={() => exportDocument("pdf")}><Download className="size-3.5" /> PDF</Button><Button size="sm" onClick={() => exportDocument("docx")}><FileText className="size-3.5" /> DOCX</Button></div></div>;
+export function InlineA4Preview({
+  document,
+  onExpand,
+}: {
+  document: GeneratedDocument;
+  onExpand: () => void;
+}) {
+  async function exportDocument(format: "pdf" | "docx") {
+    if (format === "pdf") await downloadPdf(document);
+    else await downloadDocx(document);
+    trackEvent(
+      format === "pdf" ? "document_exported_pdf" : "document_exported_docx",
+      {
+        document_type: document.type,
+        document_category: categoryForDocument(document.type),
+        language: document.locale,
+      },
+    );
+  }
+  return (
+    <div className="sticky top-20">
+      <div className="mb-3 flex items-center justify-between">
+        <div>
+          <p className="text-sm font-semibold">Live A4 preview</p>
+          <p className="text-xs text-muted-foreground">Ažurira se dok pišete</p>
+        </div>
+        <span className="flex items-center gap-1 text-xs text-emerald-600">
+          <span className="size-2 animate-pulse rounded-full bg-emerald-500" />
+          Uživo
+        </span>
+      </div>
+      <div className="aspect-[210/297] w-full overflow-hidden rounded-xl border bg-white shadow-2xl">
+        {document.quotation ? (
+          <QuotationSheet
+            data={document.quotation}
+            images={document.images}
+            compact
+          />
+        ) : document.purchaseOrder ? (
+          <PurchaseOrderSheet
+            data={document.purchaseOrder}
+            images={document.images}
+            compact
+          />
+        ) : (
+          <GenericSheet document={document} />
+        )}
+      </div>
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        <Button size="sm" variant="outline" onClick={onExpand}>
+          <Eye className="size-3.5" />
+          Pregled
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => exportDocument("pdf")}
+        >
+          <Download className="size-3.5" />
+          PDF
+        </Button>
+        <Button size="sm" onClick={() => exportDocument("docx")}>
+          <FileText className="size-3.5" />
+          DOCX
+        </Button>
+      </div>
+    </div>
+  );
 }
-
-function GenericSheet({ document }: { document: GeneratedDocument }) { return <article className="h-full p-[7%] text-[7px] leading-relaxed text-slate-800"><header className="flex items-center justify-between border-b border-blue-100 pb-3"><span className="font-bold tracking-wider text-blue-600">DOKUMENT AI</span><span className="text-slate-400">{document.title}</span></header><h2 className="mt-5 text-[16px] font-bold text-slate-950">{document.title}</h2><p className="mt-1 text-slate-400">Profesionalno pripremljen dokument</p><div className="mt-5 grid grid-cols-2 gap-x-5 gap-y-3">{document.fields.filter((field) => field.value).map((field) => <div key={field.label} className={field.type === "multiline" ? "col-span-2" : ""}><p className="font-semibold uppercase tracking-wider text-slate-400">{field.label}</p><p className="mt-1 whitespace-pre-wrap text-slate-800">{field.type === "date" ? formatDocumentDate(field.value, document.locale) : field.value}</p></div>)}</div>{document.items && <table className="mt-5 w-full border-collapse"><thead><tr className="border-b bg-slate-50 text-left"><th className="p-1.5">Opis</th><th className="p-1.5 text-right">Kol.</th><th className="p-1.5 text-right">Cijena</th><th className="p-1.5 text-right">Iznos</th></tr></thead><tbody>{document.items.map((item,index) => <tr key={index} className="border-b"><td className="p-1.5">{item.description}</td><td className="p-1.5 text-right">{item.quantity}</td><td className="p-1.5 text-right">{item.price.toFixed(2)}</td><td className="p-1.5 text-right">{item.amount.toFixed(2)}</td></tr>)}</tbody></table>}</article>; }
+function GenericSheet({ document }: { document: GeneratedDocument }) {
+  return (
+    <article className="h-full p-[7%] text-[7px] leading-relaxed text-slate-800">
+      <header className="flex justify-between border-b pb-3">
+        <span className="font-bold text-blue-600">DOKUMENT AI</span>
+        <span>{document.title}</span>
+      </header>
+      <h2 className="mt-5 text-[16px] font-bold">{document.title}</h2>
+      <p className="mt-1 text-slate-400">Profesionalno pripremljen dokument</p>
+      <div className="mt-5 grid grid-cols-2 gap-3">
+        {document.fields
+          .filter((f) => f.value)
+          .map((f) => (
+            <div
+              key={f.label}
+              className={f.type === "multiline" ? "col-span-2" : ""}
+            >
+              <p className="font-semibold uppercase text-slate-400">
+                {f.label}
+              </p>
+              <p className="whitespace-pre-wrap">
+                {f.type === "date"
+                  ? formatDocumentDate(f.value, document.locale)
+                  : f.value}
+              </p>
+            </div>
+          ))}
+      </div>
+      {document.items && (
+        <table className="mt-5 w-full">
+          <tbody>
+            {document.items.map((item, index) => (
+              <tr key={index} className="border-b">
+                <td>{item.description}</td>
+                <td className="text-right">{item.quantity}</td>
+                <td className="text-right">{item.amount.toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </article>
+  );
+}

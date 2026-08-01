@@ -1,5 +1,6 @@
 import type { DocumentType } from "@/lib/document-types";
 import type { PurchaseOrderData } from "@/lib/purchase-order";
+import type { QuotationData } from "@/lib/quotation";
 
 export type DocumentLocale = "hr" | "en";
 
@@ -38,6 +39,7 @@ export type GeneratedDocument = {
   totals?: GeneratedTotals;
   images?: GeneratedImages;
   purchaseOrder?: PurchaseOrderData;
+  quotation?: QuotationData;
 };
 
 export function formatDocumentDate(value: string, locale: DocumentLocale) {
@@ -51,7 +53,15 @@ export function formatDocumentDate(value: string, locale: DocumentLocale) {
   }).format(date);
 }
 
-export function safeDocumentFilename(document: GeneratedDocument, extension: "pdf" | "docx") {
-  const base = document.title.toLocaleLowerCase("hr").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+export function safeDocumentFilename(
+  document: GeneratedDocument,
+  extension: "pdf" | "docx",
+) {
+  const base = document.title
+    .toLocaleLowerCase("hr")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
   return `${base || "dokument"}.${extension}`;
 }
