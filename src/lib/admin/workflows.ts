@@ -1,0 +1,11 @@
+export type VersionStatus = "draft" | "review" | "published" | "deprecated" | "archived";
+export function publishVersion<T extends { version: number; status: VersionStatus }>(current: T, tested: boolean): T { if (!tested) throw new Error("ADMIN_VERSION_TEST_REQUIRED"); if (current.status === "published") throw new Error("ADMIN_NEW_VERSION_REQUIRED"); return { ...current, status: "published" }; }
+export function rollbackVersion<T extends { version: number; status: VersionStatus }>(target: T): T { return { ...structuredClone(target), version: target.version + 1, status: "draft" }; }
+export type TicketStatus = "new" | "open" | "waiting_for_user" | "waiting_internal" | "resolved" | "closed";
+const ticketTransitions: Record<TicketStatus, TicketStatus[]> = { new:["open","closed"],open:["waiting_for_user","waiting_internal","resolved","closed"],waiting_for_user:["open","resolved","closed"],waiting_internal:["open","waiting_for_user","resolved","closed"],resolved:["open","closed"],closed:["open"] };
+export function transitionTicket(current: TicketStatus, next: TicketStatus) { if (!ticketTransitions[current].includes(next)) throw new Error("INVALID_TICKET_TRANSITION"); return next; }
+export function supportMessage(body: string, internal: boolean) { const clean = body.trim(); if (!clean) throw new Error("EMPTY_SUPPORT_MESSAGE"); return { body: clean.slice(0, 20_000), internal }; }
+export type MaintenanceMode = "off" | "banner" | "block_signups" | "block_editing" | "block_ai" | "block_billing" | "full";
+export function maintenanceDecision(mode: MaintenanceMode, isPlatformAdmin: boolean) { if (isPlatformAdmin || mode === "off" || mode === "banner") return { blocked: false }; return { blocked: true, reason: `maintenance:${mode}` }; }
+export function createSafeAudit(input: { actorUserId: string; role: string; action: string; entityType: string; entityId?: string; success: boolean; metadata?: Record<string, unknown> }) { const allowed = new Set(["status","reason_code","from_plan","to_plan","version","ticket_number","error_id"]); return { actor_user_id: input.actorUserId, admin_role: input.role, action: input.action.slice(0,100), entity_type: input.entityType.slice(0,80), entity_id: input.entityId, success: input.success, safe_metadata: Object.fromEntries(Object.entries(input.metadata ?? {}).filter(([key]) => allowed.has(key))) }; }
+

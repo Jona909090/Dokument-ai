@@ -1,0 +1,38 @@
+import { describe, expect, it } from "vitest";
+import { adminRoleGrants, hasAdminPermission, requireAdminPermission } from "./permissions";
+import { adminPageRange, canAccessSharedDocument, safeAdminExport, sanitizeCMS } from "./safety";
+import { createSafeAudit, maintenanceDecision, publishVersion, rollbackVersion, supportMessage, transitionTicket } from "./workflows";
+import { adminModules, isAdminModule } from "./registry";
+
+describe("Platform Admin center", () => {
+  it("super admin ima sve dozvole", () => expect(adminRoleGrants.super_admin.length).toBeGreaterThan(15));
+  it("support agent nema billing upravljanje", () => expect(hasAdminPermission("support_agent","billing:manage")).toBe(false));
+  it("support agent može upravljati tiketima", () => expect(hasAdminPermission("support_agent","support:manage")).toBe(true));
+  it("billing admin nema security upravljanje", () => expect(hasAdminPermission("billing_admin","security:manage")).toBe(false));
+  it("billing admin može upravljati billingom", () => expect(hasAdminPermission("billing_admin","billing:manage")).toBe(true));
+  it("analyst je read-only", () => expect(hasAdminPermission("analyst","users:manage")).toBe(false));
+  it("readonly admin ne može mijenjati sadržaj", () => expect(hasAdminPermission("readonly_admin","content:manage")).toBe(false));
+  it("korisnik bez admin uloge nema mapu ovlasti", () => expect(() => requireAdminPermission("readonly_admin","system:manage")).toThrow("PLATFORM_ADMIN_PERMISSION_DENIED"));
+  it("admin registry sadrži korisnike", () => expect(isAdminModule("users")).toBe(true));
+  it("admin registry odbija nepoznatu rutu", () => expect(isAdminModule("private-documents")).toBe(false));
+  it("sigurni izvoz uklanja privatni sadržaj", () => expect(safeAdminExport([{id:"1",email:"a@b.hr",document_content:"tajna"}])).toEqual([{id:"1",email:"a@b.hr"}]));
+  it("CMS sanitizer uklanja script", () => expect(sanitizeCMS("<script>alert(1)</script><p>Sigurno</p>")).toBe("<p>Sigurno</p>"));
+  it("CMS sanitizer uklanja event handlere", () => expect(sanitizeCMS("<p onclick=\"x()\">Tekst</p>")).not.toContain("onclick"));
+  it("paginacija ograničava page size", () => expect(adminPageRange(1,1000).pageSize).toBe(100));
+  it("paginacija računa raspon", () => expect(adminPageRange(3,25)).toMatchObject({from:50,to:74}));
+  it("support pristup istječe", () => expect(canAccessSharedDocument({expiresAt:new Date(Date.now()-1000).toISOString(),revokedAt:null,allowDownload:false})).toBe(false));
+  it("opozvan support pristup ne radi", () => expect(canAccessSharedDocument({expiresAt:new Date(Date.now()+10000).toISOString(),revokedAt:new Date().toISOString(),allowDownload:true})).toBe(false));
+  it("download zahtijeva posebno dopuštenje", () => expect(canAccessSharedDocument({expiresAt:new Date(Date.now()+10000).toISOString(),revokedAt:null,allowDownload:false},true)).toBe(false));
+  it("ticket odgovor čuva public poruku", () => expect(supportMessage(" Odgovor ",false)).toEqual({body:"Odgovor",internal:false}));
+  it("interna napomena ostaje interna", () => expect(supportMessage("Samo agenti",true).internal).toBe(true));
+  it("ticket podržava validnu promjenu statusa", () => expect(transitionTicket("open","waiting_for_user")).toBe("waiting_for_user"));
+  it("ticket odbija nevalidnu promjenu", () => expect(() => transitionTicket("new","resolved")).toThrow());
+  it("CMS publish zahtijeva test", () => expect(() => publishVersion({version:1,status:"review"},false)).toThrow("ADMIN_VERSION_TEST_REQUIRED"));
+  it("objavljena verzija se ne mijenja direktno", () => expect(() => publishVersion({version:1,status:"published"},true)).toThrow("ADMIN_NEW_VERSION_REQUIRED"));
+  it("rollback stvara novu draft verziju", () => expect(rollbackVersion({version:3,status:"published"})).toEqual({version:4,status:"draft"}));
+  it("AI maintenance blokira običnog korisnika", () => expect(maintenanceDecision("block_ai",false).blocked).toBe(true));
+  it("platform admin prolazi maintenance whitelist", () => expect(maintenanceDecision("full",true).blocked).toBe(false));
+  it("audit uklanja nedopuštene metapodatke", () => expect(createSafeAudit({actorUserId:"1",role:"super_admin",action:"user.suspend",entityType:"user",success:true,metadata:{reason_code:"risk",private_note:"tajna"}}).safe_metadata).toEqual({reason_code:"risk"}));
+  it("svi admin moduli imaju permission", () => expect(Object.values(adminModules).every((module) => Boolean(module.permission))).toBe(true));
+  it("security modul zahtijeva security read", () => expect(adminModules.security.permission).toBe("security:read"));
+});

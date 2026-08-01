@@ -199,3 +199,32 @@ Stripe kuponi moraju imati povezani interni zapis prije produkcijske upotrebe. `
 - testirati Checkout, failed payment, grace period i otkazivanje u Stripe test modu
 - uključiti porezni sloj samo nakon zasebne Stripe Tax konfiguracije
 - provjeriti webhook reconciliation prije uključivanja live ključeva
+
+## Platform Admin centar
+
+Platform administracija dostupna je na `/admin` i potpuno je odvojena od organizacijskih uloga. Owner ili admin organizacije nije automatski platform administrator. Kada Supabase nije konfiguriran prikazuje se samo lokalni demo centar s praznim metrikama; nema lažnih produkcijskih podataka.
+
+### Prvi super admin
+
+Najprije primijenite `202608010004_platform_admin_center.sql`, kreirajte korisnika kroz Supabase Auth i njegov UUID ručno upišite kroz Supabase SQL Editor ili drugi strogo kontrolirani service-role postupak:
+
+```sql
+insert into public.platform_admins(user_id, role, display_name, status)
+values ('AUTH_USER_UUID', 'super_admin', 'Platform Owner', 'active');
+```
+
+Ne dodavati javnu signup mogućnost za platform admina. Uloge su `super_admin`, `platform_admin`, `support_agent`, `billing_admin`, `content_admin`, `analyst` i `readonly_admin`. Svaki admin modul provjerava dopuštenje na serveru; skrivanje navigacije nije sigurnosna kontrola.
+
+### Privatnost podrške
+
+Admin liste koriste samo profile, identifikatore i agregirane metapodatke. Sadržaj dokumenta nije dio admin dashboard upita. Ako korisnik podijeli konkretan dokument, zapis u `support_document_access` mora imati rok isteka, opcionalnog točno određenog agenta, mogućnost opoziva i odvojeno dopuštenje za download. Svaki pristup bilježi se u `support_access_events`.
+
+### CMS, promptovi i verzije
+
+CMS, help članci, email predlošci, vrste dokumenata, planovi, AI promptovi i AI sheme koriste draft/review/publish verzije. Objavljena verzija se ne mijenja izravno; promjena stvara novu verziju, zahtijeva testni rezultat i može se vratiti kroz novu draft rollback verziju. CMS sadržaj mora proći sanitizaciju i ne prihvaća proizvoljni script ili event-handler HTML.
+
+### Audit, maintenance i izvoz
+
+Privilegirane radnje zapisuju se u `platform_audit_logs` sa sigurnim metapodacima. Tablica nema obične UPDATE ili DELETE politike. Maintenance postavke čuvaju se u `system_settings`; platform admini su jedini predviđeni whitelist. Admin izvoz dopušta samo unaprijed odobrena polja, nikada sadržaj dokumenata, promptove, interne support napomene ili tajne. Svaki izvoz mora stvoriti audit zapis i vremenski ograničenu datoteku.
+
+Admin dozvole testiraju se naredbom `npm run test`. Produkcijski test mora obuhvatiti permission denied za običnog korisnika, support/billing/analyst ograničenja, istek support pristupa, CMS publish bez testa i immutable audit povijest.
