@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 import { CategoryForm } from "@/components/generator/category-form";
-import { CommerceForm } from "@/components/generator/commerce-form";
+import { InvoiceForm } from "@/components/generator/invoice-form";
 import { PurchaseOrderForm } from "@/components/generator/purchase-order-form";
 import { QuotationForm } from "@/components/generator/quotation-form";
 import { DocumentPreview } from "@/components/generator/document-preview";
@@ -264,9 +264,8 @@ export function DocumentGenerator({
             </div>
             <div className="rounded-3xl border bg-card p-5 shadow-sm sm:p-7">
               {type === "invoice" ? (
-                <CommerceForm
+                <InvoiceForm
                   key={type}
-                  type={type}
                   locale={locale}
                   onPreview={() => setModal(true)}
                   onLiveChange={updateLive}

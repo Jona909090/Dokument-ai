@@ -2,6 +2,7 @@
 import { Download, Eye, FileText } from "lucide-react";
 import { PurchaseOrderSheet } from "@/components/generator/purchase-order-sheet";
 import { QuotationSheet } from "@/components/generator/quotation-sheet";
+import { InvoiceSheet } from "@/components/generator/invoice-sheet";
 import { Button } from "@/components/ui/button";
 import { downloadDocx, downloadPdf } from "@/lib/document-export";
 import {
@@ -41,7 +42,9 @@ export function InlineA4Preview({
         </span>
       </div>
       <div className="aspect-[210/297] w-full overflow-hidden rounded-xl border bg-white shadow-2xl">
-        {document.quotation ? (
+        {document.invoice ? (
+          <InvoiceSheet data={document.invoice} images={document.images} compact />
+        ) : document.quotation ? (
           <QuotationSheet
             data={document.quotation}
             images={document.images}

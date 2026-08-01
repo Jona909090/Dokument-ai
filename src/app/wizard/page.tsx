@@ -15,7 +15,11 @@ export default async function WizardPage({
   const params = await searchParams;
   const typeValue = typeof params.type === "string" ? params.type : undefined;
   const prompt = typeof params.prompt === "string" ? params.prompt : undefined;
-  if (typeValue === "purchase-order" || typeValue === "offer")
+  if (
+    typeValue === "purchase-order" ||
+    typeValue === "offer" ||
+    typeValue === "invoice"
+  )
     return (
       <DocumentGenerator initialType={typeValue} originalPrompt={prompt} />
     );

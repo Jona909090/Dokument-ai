@@ -13,6 +13,7 @@ import {
   downloadQuotationDocx,
   downloadQuotationPdf,
 } from "@/lib/quotation-export";
+import { downloadInvoiceDocx, downloadInvoicePdf } from "@/lib/invoice-export";
 
 const euro = new Intl.NumberFormat("hr-HR", {
   style: "currency",
@@ -28,6 +29,7 @@ function displayValue(
 }
 
 export async function downloadPdf(document: GeneratedDocument) {
+  if (document.invoice) return downloadInvoicePdf(document);
   if (document.quotation) return downloadQuotationPdf(document);
   if (document.purchaseOrder) return downloadPurchaseOrderPdf(document);
   const [{ default: pdfMake }, { default: pdfFonts }] = await Promise.all([
@@ -254,6 +256,7 @@ function imageType(dataUrl: string): "jpg" | "png" {
 }
 
 export async function downloadDocx(documentData: GeneratedDocument) {
+  if (documentData.invoice) return downloadInvoiceDocx(documentData);
   if (documentData.quotation) return downloadQuotationDocx(documentData);
   if (documentData.purchaseOrder)
     return downloadPurchaseOrderDocx(documentData);

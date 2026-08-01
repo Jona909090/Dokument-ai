@@ -16,6 +16,7 @@ import { useLocalSession } from "@/components/session/local-session-provider";
 import type { SavedDocument } from "@/lib/data/models";
 import { PurchaseOrderSheet } from "@/components/generator/purchase-order-sheet";
 import { QuotationSheet } from "@/components/generator/quotation-sheet";
+import { InvoiceSheet } from "@/components/generator/invoice-sheet";
 
 const euro = new Intl.NumberFormat("hr-HR", {
   style: "currency",
@@ -179,7 +180,11 @@ export function DocumentPreview({
           </div>
         )}
 
-        {document.quotation ? (
+        {document.invoice ? (
+          <div className="mx-auto max-w-[210mm] shadow-2xl">
+            <InvoiceSheet data={document.invoice} images={document.images} />
+          </div>
+        ) : document.quotation ? (
           <div className="mx-auto max-w-[210mm] shadow-2xl">
             <QuotationSheet
               data={document.quotation}
