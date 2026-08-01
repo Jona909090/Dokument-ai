@@ -17,13 +17,16 @@ import { categoryForDocument, trackEvent } from "@/lib/analytics/service";
 import { useRepositories } from "@/lib/data/use-local-data";
 import { useLocalSession } from "@/components/session/local-session-provider";
 import type { SavedDocument } from "@/lib/data/models";
+import { answersFromAIDraft, loadAIHandoff } from "@/lib/ai/handoff";
 
 export function SmartWizard({
   initialType,
   initialPrompt,
+  aiRequestId,
 }: {
   initialType: DocumentType | null;
   initialPrompt?: string;
+  aiRequestId?: string;
 }) {
   const [type, setType] = useState<DocumentType | null>(initialType);
   const [prompt, setPrompt] = useState(initialPrompt ?? "");
@@ -40,6 +43,7 @@ export function SmartWizard({
   const completedRef = useRef(false);
   const trackedTypeRef = useRef<DocumentType | null>(initialType);
   const startedAtRef = useRef(0);
+  const [aiPrepared, setAIPrepared] = useState(false);
   const questions = type ? wizardQuestions[type] : [];
   const question = questions[step];
   const document = useMemo(
@@ -55,6 +59,19 @@ export function SmartWizard({
     trackEvent("document_type_viewed", metadata);
     trackEvent("document_started", metadata);
   }, [initialType]);
+  useEffect(() => {
+    if (!aiRequestId || !initialType) return;
+    const handoff = loadAIHandoff(aiRequestId);
+    if (!handoff || handoff.result.classification.documentType !== initialType) return;
+    const prepared = answersFromAIDraft(handoff.result);
+    const firstMissing = wizardQuestions[initialType].findIndex((item) => item.required && !prepared[item.id]?.trim());
+    const timer = window.setTimeout(() => {
+      setAnswers(prepared);
+      setStep(firstMissing < 0 ? 0 : firstMissing);
+      setAIPrepared(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [aiRequestId, initialType]);
   useEffect(() => {
     if (!repositories || !type || Object.keys(answers).length) return;
     const company = repositories.companies.getByUser(user.id);
@@ -149,7 +166,7 @@ export function SmartWizard({
               Smart Wizard · {documentTypeDefinitions[type].label}
             </h1>
             <p className="hidden text-xs text-muted-foreground sm:block">
-              Lokalna logika · bez AI API-ja
+              {aiPrepared ? "AI prijedlog · provjerite podatke" : "Pametni dokument wizard"}
             </p>
           </div>
           <span className="ml-auto hidden items-center gap-1 text-xs text-muted-foreground sm:flex">
@@ -224,8 +241,7 @@ export function SmartWizard({
               )}
             </div>
             <p className="mt-5 text-center text-xs text-muted-foreground">
-              Odgovori se lokalno spremaju u vaš preglednik. Ne šalju se
-              vanjskim servisima.
+              {aiPrepared ? "AI je pripremio samo podatke iz vašeg zahtjeva. Provjerite važna polja prije izvoza." : "Odgovori se lokalno spremaju u vaš preglednik."}
             </p>
           </div>
         </section>

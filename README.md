@@ -130,8 +130,8 @@ Kreirajte API ključ u OpenAI Platform postavkama i spremite ga samo u lokalni `
 
 ```env
 OPENAI_API_KEY=
-OPENAI_MODEL=gpt-5.6-terra
-OPENAI_FALLBACK_MODEL=gpt-5.6-luna
+OPENAI_MODEL=gpt-5.6-sol
+OPENAI_FALLBACK_MODEL=gpt-5.6-sol
 AI_PROVIDER=openai
 AI_ENABLED=true
 AI_TIMEOUT_MS=45000

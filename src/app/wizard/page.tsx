@@ -15,15 +15,17 @@ export default async function WizardPage({
   const params = await searchParams;
   const typeValue = typeof params.type === "string" ? params.type : undefined;
   const prompt = typeof params.prompt === "string" ? params.prompt : undefined;
-  if (
+  const aiRequestId = typeof params.requestId === "string" ? params.requestId : undefined;
+  const aiSource = params.source === "ai";
+  if (!aiSource && (
     typeValue === "purchase-order" ||
     typeValue === "offer" ||
-    typeValue === "invoice"
-    || typeValue === "proforma"
-    || typeValue === "daily-report"
-    || typeValue === "completed-works-report"
-    || typeValue === "work-handover"
-  )
+    typeValue === "invoice" ||
+    typeValue === "proforma" ||
+    typeValue === "daily-report" ||
+    typeValue === "completed-works-report" ||
+    typeValue === "work-handover"
+  ))
     return (
       <DocumentGenerator initialType={typeValue} originalPrompt={prompt} />
     );
@@ -31,6 +33,7 @@ export default async function WizardPage({
     <SmartWizard
       initialType={isDocumentType(typeValue) ? typeValue : null}
       initialPrompt={prompt}
+      aiRequestId={aiRequestId}
     />
   );
 }
