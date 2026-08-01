@@ -1,0 +1,1 @@
+export default function Loading() { return <main className="mx-auto max-w-[1500px] p-8"><div className="skeleton h-11 w-72 rounded-xl" /><div className="mt-8 grid gap-5 lg:grid-cols-3">{Array.from({ length: 6 }, (_, i) => <div className="skeleton h-72 rounded-3xl" key={i} />)}</div></main>; }

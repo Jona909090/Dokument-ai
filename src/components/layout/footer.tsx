@@ -1,30 +1,4 @@
 import Link from "next/link";
-import { FileText } from "lucide-react";
-
-export function Footer() {
-  return (
-    <footer className="border-t bg-slate-950 text-slate-300">
-      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:px-8 md:grid-cols-[1fr_auto] lg:px-10">
-        <div className="max-w-md">
-          <Link href="/#top" className="inline-flex items-center gap-2.5 text-lg font-semibold text-white">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-blue-600"><FileText className="size-5" aria-hidden="true" /></span>
-            Dokument AI
-          </Link>
-          <p className="mt-4 text-sm leading-6 text-slate-400">
-            Jednostavniji put od ideje do profesionalno strukturiranog dokumenta.
-          </p>
-        </div>
-        <nav className="flex flex-wrap content-start gap-x-7 gap-y-3 text-sm" aria-label="Pravne informacije">
-          <Link href="/privacy" className="transition hover:text-white">Privatnost</Link>
-          <Link href="/terms" className="transition hover:text-white">Uslovi korišćenja</Link>
-          <Link href="/contact" className="transition hover:text-white">Kontakt</Link>
-        </nav>
-      </div>
-      <div className="border-t border-white/10">
-        <div className="mx-auto max-w-7xl px-5 py-5 text-xs text-slate-300 sm:px-8 lg:px-10">
-          © {new Date().getFullYear()} Dokument AI. Sva prava zadržana.
-        </div>
-      </div>
-    </footer>
-  );
-}
+import { FileText, HelpCircle } from "lucide-react";
+import { brand } from "@/lib/brand";
+export function Footer(){return <footer className="border-t bg-slate-950 text-slate-400"><div className="mx-auto flex max-w-[1500px] flex-col gap-4 px-4 py-6 sm:px-8 lg:flex-row lg:items-center"><div className="flex items-center gap-2.5"><span className="flex size-8 items-center justify-center rounded-lg bg-blue-600 text-white"><FileText className="size-4"/></span><span><b className="block text-sm text-white">{brand.name}</b><span className="block text-[10px]">{brand.tagline}</span></span></div><nav className="flex flex-wrap gap-x-5 gap-y-2 text-xs lg:ml-auto" aria-label="Footer navigacija"><Link href="/#dokumenti" className="hover:text-white">Dokumenti</Link><Link href="/templates" className="hover:text-white">Predlošci</Link><Link href="/pricing" className="hover:text-white">Cijene</Link><Link href="/dashboard/help" className="inline-flex items-center gap-1 hover:text-white"><HelpCircle className="size-3"/> Pomoć</Link><Link href="/privacy" className="hover:text-white">Privatnost</Link><Link href="/terms" className="hover:text-white">Uvjeti</Link><Link href="/contact" className="hover:text-white">Kontakt</Link></nav><span className="text-[10px] lg:ml-5">© {new Date().getFullYear()} {brand.legalName}</span></div></footer>}

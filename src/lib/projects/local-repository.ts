@@ -1,0 +1,27 @@
+import { demoProjectSnapshot } from "./demo-data";
+import type { ProjectRepository, ProjectQuery } from "./repository";
+import type { OperationalEntityKey, Project, ProjectSnapshot } from "./types";
+
+const storageKey = "dokument-ai-project-operations-v1";
+const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
+const uid = () => typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `local-${Date.now()}`;
+export interface ProjectStorage { getItem(key: string): string | null; setItem(key: string, value: string): void }
+export const browserProjectStorage: ProjectStorage = {
+  getItem: (key) => typeof window === "undefined" ? null : window.localStorage.getItem(key),
+  setItem: (key, value) => { if (typeof window !== "undefined") window.localStorage.setItem(key, value); },
+};
+
+export class LocalProjectRepository implements ProjectRepository {
+  constructor(private readonly storage: ProjectStorage) {}
+  private read(): ProjectSnapshot[] { const raw = this.storage.getItem(storageKey); if (!raw) { const seeded = [clone(demoProjectSnapshot)]; this.write(seeded); return seeded; } try { return JSON.parse(raw) as ProjectSnapshot[]; } catch { return [clone(demoProjectSnapshot)]; } }
+  private write(value: ProjectSnapshot[]) { this.storage.setItem(storageKey, JSON.stringify(value)); }
+  async list(query: ProjectQuery = {}) { const page = query.page ?? 1; const pageSize = query.pageSize ?? 20; const term = query.search?.toLocaleLowerCase("hr") ?? ""; const filtered = this.read().map((item) => item.project).filter((project) => (query.includeArchived || !project.archivedAt) && !project.deletedAt && (!query.status || project.status === query.status) && (!term || `${project.code} ${project.name} ${project.city}`.toLocaleLowerCase("hr").includes(term))); return { items: filtered.slice((page - 1) * pageSize, page * pageSize), total: filtered.length, page, pageSize }; }
+  async get(id: string) { return clone(this.read().find((item) => item.project.id === id && !item.project.deletedAt) ?? null); }
+  async saveProject(project: Project) { const all = this.read(); const at = new Date().toISOString(); const saved = { ...project, id: project.id || uid(), updatedAt: at, createdAt: project.createdAt || at }; const index = all.findIndex((item) => item.project.id === saved.id); if (index >= 0) all[index].project = saved; else all.push({ project: saved, phases: [], locations: [], tasks: [], workforce: [], materials: [], equipment: [], costs: [], issues: [], meetings: [], photos: [], documents: [], activity: [] }); this.write(all); return clone(saved); }
+  async duplicateProject(id: string) { const all = this.read(); const source = all.find((item) => item.project.id === id); if (!source) throw new Error("Projekt nije pronađen."); const at = new Date().toISOString(); const nextId = uid(); const copied = clone(source); copied.project = { ...copied.project, id: nextId, code: `${copied.project.code}-COPY`, name: `${copied.project.name} – kopija`, status: "draft", progressPercent: 0, createdAt: at, updatedAt: at }; for (const key of Object.keys(copied) as Array<keyof ProjectSnapshot>) if (Array.isArray(copied[key])) (copied[key] as Array<{ projectId: string }>).forEach((entity) => { entity.projectId = nextId; }); all.push(copied); this.write(all); return copied.project; }
+  async archiveProject(id: string, archived: boolean) { const snapshot = await this.get(id); if (!snapshot) throw new Error("Projekt nije pronađen."); return this.saveProject({ ...snapshot.project, archivedAt: archived ? new Date().toISOString() : null, status: archived ? "archived" : "active" }); }
+  async softDeleteProject(id: string) { const snapshot = await this.get(id); if (!snapshot) throw new Error("Projekt nije pronađen."); await this.saveProject({ ...snapshot.project, deletedAt: new Date().toISOString() }); }
+  async restoreProject(id: string) { const all = this.read(); const snapshot = all.find((item) => item.project.id === id); if (!snapshot) throw new Error("Projekt nije pronađen."); snapshot.project.deletedAt = null; snapshot.project.updatedAt = new Date().toISOString(); this.write(all); return clone(snapshot.project); }
+  async saveEntity<K extends OperationalEntityKey>(projectId: string, key: K, entity: ProjectSnapshot[K][number]) { const all = this.read(); const snapshot = all.find((item) => item.project.id === projectId); if (!snapshot) throw new Error("Projekt nije pronađen."); const collection = snapshot[key] as Array<ProjectSnapshot[K][number] & { id: string; updatedAt: string; createdAt: string }>; const at = new Date().toISOString(); const saved = { ...entity, id: entity.id || uid(), projectId, updatedAt: at, createdAt: entity.createdAt || at } as ProjectSnapshot[K][number]; const index = collection.findIndex((item) => item.id === saved.id); if (index >= 0) collection[index] = saved as (typeof collection)[number]; else collection.push(saved as (typeof collection)[number]); this.write(all); return clone(saved); }
+  async softDeleteEntity<K extends OperationalEntityKey>(projectId: string, key: K, id: string) { const all = this.read(); const snapshot = all.find((item) => item.project.id === projectId); if (!snapshot) throw new Error("Projekt nije pronađen."); const entity = (snapshot[key] as Array<{ id: string; deletedAt?: string | null }>).find((item) => item.id === id); if (!entity) throw new Error("Zapis nije pronađen."); entity.deletedAt = new Date().toISOString(); this.write(all); }
+}

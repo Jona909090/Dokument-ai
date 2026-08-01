@@ -1,78 +1,11 @@
 "use client";
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { FileText, Menu, X } from "lucide-react";
-
+import { FilePlus2, FileText, HelpCircle, LayoutDashboard, Menu, X } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
+import { brand } from "@/lib/brand";
 import { cn } from "@/lib/utils";
-
-const navigation = [
-  { label: "Početna", href: "/#top" },
-  { label: "Dokumenti", href: "/#dokumenti" },
-  { label: "Šabloni", href: "/templates" },
-  { label: "Cene", href: "/pricing" },
-  { label: "Kako funkcioniše", href: "/#kako-funkcionise" },
-];
-
-export function Header() {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <header className="sticky top-0 z-50 border-b border-border/70 bg-background/90 backdrop-blur-xl">
-      <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-10">
-        <Link
-          href="/#top"
-          className="flex items-center gap-2.5 font-semibold tracking-tight"
-          onClick={() => setIsOpen(false)}
-        >
-          <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-            <FileText className="size-5" aria-hidden="true" />
-          </span>
-          <span className="text-lg">Dokument AI</span>
-        </Link>
-
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="Glavna navigacija">
-          {navigation.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
-            >
-              {item.label}
-            </Link>
-          ))}
-          <Link href="/dashboard" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "ml-2")}>Demo dashboard</Link>
-          <Link href="/wizard" className={cn(buttonVariants({ size: "sm" }), "ml-1")}>Novi dokument</Link>
-        </nav>
-
-        <button
-          type="button"
-          className="flex size-10 items-center justify-center rounded-xl border border-border text-foreground transition hover:bg-muted lg:hidden"
-          aria-label={isOpen ? "Zatvori meni" : "Otvori meni"}
-          aria-expanded={isOpen}
-          aria-controls="mobile-navigation"
-          onClick={() => setIsOpen((value) => !value)}
-        >
-          {isOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-        </button>
-      </div>
-
-      {isOpen && (
-        <nav id="mobile-navigation" className="border-t bg-background px-5 py-5 lg:hidden" aria-label="Mobilna navigacija">
-          <div className="mx-auto flex max-w-7xl flex-col gap-1">
-            {navigation.map((item) => (
-              <Link key={item.label} href={item.href} onClick={() => setIsOpen(false)} className="rounded-xl px-4 py-3 font-medium text-muted-foreground hover:bg-muted hover:text-foreground">
-                {item.label}
-              </Link>
-            ))}
-            <div className="mt-3 grid grid-cols-2 gap-3 border-t pt-4">
-              <Link href="/dashboard" onClick={() => setIsOpen(false)} className={buttonVariants({ variant: "outline" })}>Demo dashboard</Link>
-              <Link href="/wizard" onClick={() => setIsOpen(false)} className={buttonVariants()}>Novi dokument</Link>
-            </div>
-          </div>
-        </nav>
-      )}
-    </header>
-  );
-}
+import { usePublicSession } from "@/lib/supabase/use-public-session";
+import { trackLandingEvent } from "@/lib/analytics/service";
+const navigation=[{label:"Dokumenti",href:"/#dokumenti"},{label:"Predlošci",href:"/templates"},{label:"Cijene",href:"/pricing"}];
+export function Header(){const[open,setOpen]=useState(false),[help,setHelp]=useState(false),[scrolled,setScrolled]=useState(false);const session=usePublicSession();useEffect(()=>{const update=()=>setScrolled(scrollY>8);update();addEventListener("scroll",update,{passive:true});return()=>removeEventListener("scroll",update)},[]);function openHelp(){setHelp(true);trackLandingEvent("help_opened")}return <><header className={`sticky top-0 z-50 h-16 border-b transition ${scrolled?"bg-background/95 shadow-sm backdrop-blur-xl":"bg-background/90 backdrop-blur"}`}><div className="mx-auto flex h-full max-w-[1500px] items-center px-4 sm:px-8"><Link href="/" className="flex items-center gap-2.5 font-semibold"><span className="flex size-9 items-center justify-center rounded-xl bg-blue-600 text-white"><FileText className="size-5"/></span><span>{brand.name}</span></Link><nav className="ml-auto hidden items-center gap-1 lg:flex" aria-label="Glavna navigacija">{navigation.map(item=><Link key={item.label} href={item.href} className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">{item.label}</Link>)}<button onClick={openHelp} className="flex size-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="Kako koristiti Smart Documents"><HelpCircle className="size-4"/></button>{session.authenticated?<><Link href="/wizard" className={cn(buttonVariants({variant:"outline",size:"sm"}),"ml-2")}><FilePlus2 className="size-4"/> Novi dokument</Link><Link href="/dashboard" className={buttonVariants({size:"sm"})}><LayoutDashboard className="size-4"/> Dashboard</Link></>:<><Link onClick={()=>trackLandingEvent("login_clicked")} href="/login" className={cn(buttonVariants({variant:"ghost",size:"sm"}),"ml-2")}>Prijava</Link><Link onClick={()=>trackLandingEvent("signup_clicked")} href="/register" className={buttonVariants({size:"sm"})}>Započni besplatno</Link></>}</nav><button onClick={()=>setOpen(v=>!v)} aria-expanded={open} aria-controls="mobile-navigation" aria-label={open?"Zatvori meni":"Otvori meni"} className="ml-auto flex size-10 items-center justify-center rounded-xl border lg:hidden">{open?<X/>:<Menu/>}</button></div>{open&&<nav id="mobile-navigation" className="border-t bg-background p-3 shadow-xl lg:hidden" aria-label="Mobilna navigacija"><div className="mx-auto flex max-w-7xl flex-col gap-1">{navigation.map(item=><Link onClick={()=>setOpen(false)} key={item.label} href={item.href} className="rounded-xl px-4 py-2.5 font-medium hover:bg-muted">{item.label}</Link>)}<button onClick={()=>{setOpen(false);openHelp()}} className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-left font-medium hover:bg-muted"><HelpCircle className="size-4"/> Kako radi?</button><div className="mt-2 grid grid-cols-2 gap-2 border-t pt-3">{session.authenticated?<><Link href="/wizard" className={buttonVariants({variant:"outline"})}>Novi dokument</Link><Link href="/dashboard" className={buttonVariants()}>Dashboard</Link></>:<><Link href="/login" className={buttonVariants({variant:"outline"})}>Prijava</Link><Link href="/register" className={buttonVariants()}>Registriraj se</Link></>}</div></div></nav>}</header>{help&&<div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="help-title" onMouseDown={event=>event.target===event.currentTarget&&setHelp(false)}><div className="w-full max-w-md rounded-3xl border bg-background p-6 shadow-2xl"><div className="flex items-start justify-between"><div><p className="text-xs font-bold uppercase tracking-wider text-blue-600">Brzi vodič</p><h2 id="help-title" className="mt-1 text-xl font-semibold">Kako koristiti {brand.name}</h2></div><button onClick={()=>setHelp(false)} className="rounded-lg p-2 hover:bg-muted" aria-label="Zatvori pomoć"><X className="size-4"/></button></div><ol className="mt-6 space-y-3">{["Napišite što vam treba","Uredite podatke i izgled","Preuzmite PDF ili Word"].map((text,index)=><li key={text} className="flex items-center gap-3 rounded-xl border p-3"><span className="flex size-8 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white">{index+1}</span><span className="text-sm font-medium">{text}</span></li>)}</ol><Link href="/dashboard/help" className="mt-5 inline-flex text-sm font-semibold text-blue-700 hover:underline">Otvori centar za pomoć</Link></div></div>}</>}

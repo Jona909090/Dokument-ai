@@ -1,59 +1,18 @@
 "use client";
-
-import { useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, X } from "lucide-react";
-
-import { BenefitsSection } from "@/components/landing/benefits-section";
-import { CtaSection } from "@/components/landing/cta-section";
-import { HeroSection } from "@/components/landing/hero-section";
-import { HowItWorks } from "@/components/landing/how-it-works";
-import { PopularDocuments } from "@/components/landing/popular-documents";
+import { HeroSection } from "./hero-section";
+import { PopularDocuments } from "./popular-documents";
+import { CompactSummary } from "./compact-summary";
+import { confidenceRange, discoverDocuments } from "@/lib/landing-discovery";
+import type { DocumentType } from "@/lib/document-types";
+import { trackLandingEvent } from "@/lib/analytics/service";
 
 export function LandingPage() {
-  const router = useRouter();
-  const [request, setRequest] = useState("");
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const toastTimer = useRef<number | null>(null);
-
-  function selectDocument(prompt: string) {
-    setRequest(prompt);
-    document.querySelector("#document-request")?.scrollIntoView({ behavior: "smooth", block: "center" });
-    window.setTimeout(() => document.querySelector<HTMLTextAreaElement>("#document-request")?.focus(), 500);
-  }
-
-  function showMessage(message: string) {
-    setToastMessage(message);
-    setShowToast(true);
-    if (toastTimer.current) window.clearTimeout(toastTimer.current);
-    toastTimer.current = window.setTimeout(() => setShowToast(false), 4500);
-  }
-
-  function startGenerator() {
-    if (request.trim().length < 3) {
-      showMessage("Nismo prepoznali vrstu dokumenta. Pokušajte navesti CV, fakturu, ponudu, ugovor, zahtjev, otkaz, narudžbenicu, zapisnik, potvrdu ili poslovno pismo.");
-      return;
-    }
-    setLoading(true);
-    router.push(`/copilot?prompt=${encodeURIComponent(request.trim())}`);
-  }
-
-  return (
-    <>
-      <HeroSection value={request} onValueChange={setRequest} onSubmit={startGenerator} loading={loading} />
-      <PopularDocuments onSelect={selectDocument} />
-      <HowItWorks />
-      <BenefitsSection />
-      <CtaSection />
-      {showToast && (
-        <div role="status" aria-live="polite" className="fixed inset-x-4 bottom-5 z-[70] mx-auto flex max-w-md items-start gap-3 rounded-2xl border border-blue-100 bg-white p-4 text-sm text-slate-700 shadow-2xl">
-          <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-blue-600" aria-hidden="true" />
-          <p className="flex-1 font-medium leading-5">{toastMessage}</p>
-          <button type="button" onClick={() => setShowToast(false)} className="rounded-md p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Zatvori obaveštenje"><X className="size-4" /></button>
-        </div>
-      )}
-    </>
-  );
+  const router = useRouter(); const [request,setRequest]=useState(""); const [loading,setLoading]=useState(false); const [error,setError]=useState(""); const [started,setStarted]=useState(false);
+  const suggestions=useMemo(()=>discoverDocuments(request),[request]);
+  function change(value:string){setRequest(value);setError("");if(!started&&value.trim()){setStarted(true);trackLandingEvent("smart_prompt_started");}if(value.trim().length>1&&discoverDocuments(value).length)trackLandingEvent("document_suggestion_shown",{documentType:discoverDocuments(value)[0].type,confidence:confidenceRange(discoverDocuments(value)[0].confidence)});}
+  function open(type:DocumentType,source:"suggestion"|"quick"|"manual"){if(source==="suggestion")trackLandingEvent("document_suggestion_selected",{documentType:type,confidence:suggestions[0]?confidenceRange(suggestions[0].confidence):undefined});else if(source==="quick")trackLandingEvent("quick_action_selected",{documentType:type});else trackLandingEvent("manual_document_selected",{documentType:type});setLoading(true);router.push(`/wizard?type=${type}${request.trim()?`&prompt=${encodeURIComponent(request.trim())}`:""}`);}
+  function submit(){if(!suggestions.length){setError("Nismo dovoljno sigurni koji dokument trebate. Odaberite dokument među karticama ispod ili preciznije opišite zahtjev.");trackLandingEvent("hero_prompt_submitted",{success:false});return;}trackLandingEvent("hero_prompt_submitted",{documentType:suggestions[0].type,confidence:confidenceRange(suggestions[0].confidence),success:true});open(suggestions[0].type,"suggestion");}
+  return <><HeroSection value={request} onValueChange={change} onSubmit={submit} onOpen={(type,source)=>open(type,source)} suggestions={suggestions} loading={loading} error={error}/><CompactSummary/><PopularDocuments onOpen={(type)=>open(type,"manual")}/></>;
 }

@@ -1,67 +1,23 @@
-import { ArrowRight, Loader2, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, BriefcaseBusiness, Check, FileChartColumn, FileText, Loader2, LockKeyhole, Mail, ReceiptText, ShoppingCart, UserRound, X } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Button, buttonVariants } from "@/components/ui/button";
+import type { DiscoverySuggestion } from "@/lib/landing-discovery";
+import { documentTypeDefinitions, type DocumentType } from "@/lib/document-types";
+import { greetingForHour, formatLandingDate, formatLandingTime } from "@/lib/landing-personalization";
+import { usePublicSession } from "@/lib/supabase/use-public-session";
+import { trackLandingEvent } from "@/lib/analytics/service";
 
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+const frequentTypes:DocumentType[]=["offer","invoice","purchase-order","business-letter","cv","daily-report"];
+const shortLabels:Partial<Record<DocumentType,string>>={"business-letter":"Poslovni email","daily-report":"Dnevni izvještaj"};
+const icons:Partial<Record<DocumentType,LucideIcon>>={offer:BriefcaseBusiness,invoice:ReceiptText,"purchase-order":ShoppingCart,"business-letter":Mail,cv:UserRound,"daily-report":FileChartColumn};
+const motivations=["Profesionalni dokument za manje od minute.","Manje pisanja. Više urađenog.","Sve počinje jednom rečenicom.","Pripremite dokument bez komplikovanih obrazaca.","Vaš poslovni dokument, spreman za uređivanje."];
+const promptExamples=["Napravi ponudu za hidroizolaciju podruma...","Trebam narudžbenicu za građevinski materijal...","Napiši profesionalni email dobavljaču...","Napravi dnevni izvještaj sa gradilišta...","Trebam profesionalni CV..."];
+type Props={value:string;onValueChange:(value:string)=>void;onSubmit:()=>void;onOpen:(type:DocumentType,source:"suggestion"|"quick")=>void;suggestions:DiscoverySuggestion[];loading?:boolean;error?:string};
 
-const examples = [
-  "Napravi ponudu za hidroizolaciju podruma.",
-  "Treba mi profesionalni CV.",
-  "Napravi fakturu.",
-  "Treba mi ugovor o radu.",
-  "Napravi narudžbenicu.",
-];
-
-type HeroSectionProps = {
-  value: string;
-  onValueChange: (value: string) => void;
-  onSubmit: () => void;
-  loading?: boolean;
-};
-
-export function HeroSection({ value, onValueChange, onSubmit, loading }: HeroSectionProps) {
-  return (
-    <section id="top" className="relative scroll-mt-24 overflow-hidden pb-12 pt-18 sm:pt-24 lg:pt-28">
-      <div className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[34rem] w-[54rem] -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-200/70 via-indigo-200/60 to-cyan-100/70 blur-3xl dark:from-blue-950/60 dark:via-indigo-950/50 dark:to-cyan-950/40" />
-      <div className="animate-float pointer-events-none absolute right-[8%] top-28 -z-10 size-20 rounded-3xl border border-white/40 bg-white/30 shadow-xl backdrop-blur dark:bg-white/5" />
-      <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
-        <div className="mx-auto max-w-4xl text-center">
-          <div className="mb-6 inline-flex animate-in fade-in slide-in-from-bottom-2 items-center gap-2 rounded-full border border-blue-200 bg-blue-50/80 px-4 py-2 text-sm font-medium text-blue-700 shadow-sm backdrop-blur dark:border-blue-800 dark:bg-blue-950/70 dark:text-blue-300">
-            <Sparkles className="size-4" aria-hidden="true" />
-            Pametniji način za izradu dokumenata
-          </div>
-          <h1 className="animate-in fade-in slide-in-from-bottom-4 text-balance text-4xl font-semibold tracking-[-0.04em] text-foreground duration-700 sm:text-5xl lg:text-7xl lg:leading-[1.05]">
-            Šta želiš <span className="bg-gradient-to-r from-blue-600 to-indigo-500 bg-clip-text text-transparent">napraviti danas?</span>
-          </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg leading-8 text-muted-foreground sm:text-xl">
-            Opišite šta vam treba, odgovorite na nekoliko pitanja i pripremite profesionalan dokument brzo i jednostavno.
-          </p>
-        </div>
-
-        <div className="group mx-auto mt-10 max-w-3xl rounded-[2rem] border bg-card/90 p-3 shadow-[0_30px_100px_-35px_rgba(37,99,235,0.5)] backdrop-blur transition duration-500 hover:-translate-y-1 hover:shadow-[0_35px_110px_-35px_rgba(37,99,235,0.65)] sm:p-4">
-          <label htmlFor="document-request" className="sr-only">Opišite dokument koji želite da napravite</label>
-          <Textarea
-            id="document-request"
-            value={value}
-            onChange={(event) => onValueChange(event.target.value)}
-            placeholder="Opišite dokument koji želite da napravite..."
-            className="min-h-36 border-0 bg-muted/60 p-5 text-base shadow-none transition group-hover:bg-muted focus-visible:ring-0 sm:text-lg"
-          />
-          <div className="flex justify-end pt-3">
-            <Button size="lg" onClick={onSubmit} disabled={loading} className="w-full transition hover:scale-[1.02] active:scale-[.98] sm:w-auto">
-              {loading ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" aria-hidden="true" />} {loading ? "Otvaranje wizarda…" : "Pokreni Smart Wizard"}
-            </Button>
-          </div>
-        </div>
-
-        <div className="mx-auto mt-6 flex max-w-4xl flex-wrap justify-center gap-2">
-          <span className="w-full pb-1 text-center text-sm text-muted-foreground sm:w-auto sm:py-2">Probajte primjer:</span>
-          {examples.map((example) => (
-            <button key={example} type="button" onClick={() => onValueChange(example)} className="rounded-full border bg-card px-3.5 py-2 text-xs font-medium text-muted-foreground transition hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-950 sm:text-sm">
-              {example}
-            </button>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
+export function HeroSection({value,onValueChange,onSubmit,onOpen,suggestions,loading,error}:Props){const textarea=useRef<HTMLTextAreaElement>(null),primary=suggestions[0],session=usePublicSession();const[now,setNow]=useState<Date|null>(null),[placeholder,setPlaceholder]=useState(0),[motivation,setMotivation]=useState(motivations[0]);useEffect(()=>{const element=textarea.current;if(!element)return;element.style.height="0px";element.style.height=`${Math.min(136,Math.max(84,element.scrollHeight))}px`},[value]);useEffect(()=>{const start=window.setTimeout(()=>{setNow(new Date());setMotivation(motivations[Math.floor(Math.random()*motivations.length)])},0),clock=window.setInterval(()=>setNow(new Date()),1000),prompts=window.setInterval(()=>setPlaceholder(index=>(index+1)%promptExamples.length),4000);return()=>{clearTimeout(start);clearInterval(clock);clearInterval(prompts)}},[]);const greeting=now?greetingForHour(now.getHours()):"Dobro došli";function openFrequent(type:DocumentType){trackLandingEvent("frequent_document_selected",{documentType:type});onOpen(type,"quick")}return <section id="top" className="relative isolate overflow-hidden bg-slate-100/80 dark:bg-slate-950 lg:min-h-[calc(100svh-4rem)]"><div className="landing-grid pointer-events-none absolute inset-0 -z-10 opacity-35"/><div className="mx-auto grid max-w-[1500px] gap-3 px-3 py-3 sm:px-5 lg:grid-cols-[190px_minmax(0,1fr)_250px] lg:px-6">
+  <aside className="hidden rounded-2xl border bg-card p-3 shadow-sm lg:block"><p className="px-2 text-[10px] font-bold uppercase tracking-[.16em] text-muted-foreground">Najčešći dokumenti</p><nav className="mt-3 space-y-1" aria-label="Najčešći dokumenti">{frequentTypes.map(type=>{const Icon=icons[type]??FileText;return <button key={type} onClick={()=>openFrequent(type)} className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2.5 text-left text-xs font-medium transition hover:bg-blue-50 hover:text-blue-800 focus-visible:outline-2 focus-visible:outline-blue-600 dark:hover:bg-blue-950"><Icon className="size-4 text-blue-600"/><span className="truncate">{shortLabels[type]??documentTypeDefinitions[type].label}</span></button>})}</nav><a href="#dokumenti" className="mt-3 flex items-center justify-between rounded-xl border px-3 py-2.5 text-xs font-semibold text-blue-700">Prikaži sve <ArrowRight className="size-3.5"/></a><div className="mt-5 border-t pt-4"><p className="text-[10px] leading-4 text-muted-foreground"><LockKeyhole className="mr-1 inline size-3"/> Prepoznavanje se trenutno izvršava lokalno.</p></div></aside>
+  <main className="min-w-0 rounded-2xl border bg-card p-4 shadow-sm sm:p-5"><div className="flex flex-wrap items-end justify-between gap-2"><div><p className="text-sm font-semibold text-blue-700">{greeting}{session.name?`, ${session.name}`:""}.</p><p className="mt-1 text-xs text-muted-foreground">{now?formatLandingDate(now):"Učitavanje datuma…"}</p></div><time aria-label="Trenutno lokalno vrijeme" className="font-mono text-base font-semibold tabular-nums" dateTime={now?.toISOString()}>{now?formatLandingTime(now):"--:--:--"}</time></div><h1 className="mt-4 text-balance text-4xl font-semibold leading-[1.02] tracking-[-.04em] sm:text-5xl">Napišite što vam <span className="text-blue-600">treba.</span></h1><p className="mt-2 text-sm font-medium">Profesionalni dokument počinje jednom rečenicom.</p><p className="mt-1 text-xs text-muted-foreground">{motivation} Opišite zadatak ili odaberite dokument iz brzog menija.</p><div className="mt-5 rounded-2xl border bg-background p-2.5 shadow-[0_18px_55px_-35px_rgba(37,99,235,.8)]"><label htmlFor="document-request" className="sr-only">Napišite što vam treba</label><textarea ref={textarea} id="document-request" value={value} disabled={loading} onChange={event=>onValueChange(event.target.value)} onKeyDown={event=>{if((event.ctrlKey||event.metaKey)&&event.key==="Enter"){event.preventDefault();onSubmit()}}} placeholder={promptExamples[placeholder]} className="w-full resize-none rounded-xl bg-muted/55 px-4 py-3 text-sm leading-6 outline-none transition-[height] focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-60 sm:text-base" aria-describedby="prompt-help prompt-status"/><div className="flex items-center gap-2 pt-2"><span id="prompt-help" className="hidden text-[11px] text-muted-foreground sm:inline">Ctrl/Cmd + Enter</span><div className="ml-auto flex gap-1.5">{value&&<Button variant="ghost" size="sm" onClick={()=>onValueChange("")}><X className="size-3.5"/>Obriši</Button>}<Button size="sm" onClick={()=>{trackLandingEvent("smart_prompt_submitted",{documentType:primary?.type,success:Boolean(primary)});onSubmit()}} disabled={loading||value.trim().length<2}>{loading?<Loader2 className="size-3.5 animate-spin"/>:<FileText className="size-3.5"/>}Pripremi dokument<ArrowRight className="size-3.5"/></Button></div></div></div><div id="prompt-status" aria-live="polite" className="mt-2 min-h-8">{error?<p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p>:primary?<div className="flex flex-wrap items-center gap-2 rounded-xl border bg-background px-3 py-2 text-xs"><b>Najvjerojatniji dokument: {primary.label}</b><button onClick={()=>{trackLandingEvent("suggested_document_selected",{documentType:primary.type});onOpen(primary.type,"suggestion")}} className="ml-auto font-semibold text-blue-700 hover:underline">Nastavi s {primary.label.toLocaleLowerCase("hr")}</button><a href="#dokumenti" className="text-muted-foreground hover:text-foreground">Promijeni</a></div>:<p className="text-[11px] text-muted-foreground">Prepoznavanje se trenutno izvršava lokalno.</p>}</div><div className="mt-2 grid grid-cols-3 gap-1.5 lg:hidden" aria-label="Brze akcije">{frequentTypes.map(type=>{const Icon=icons[type]??FileText;return <button key={type} onClick={()=>openFrequent(type)} className="flex min-w-0 items-center justify-center gap-1 rounded-lg border px-1.5 py-2 text-[10px] font-medium"><Icon className="size-3.5 shrink-0 text-blue-600"/><span className="truncate">{shortLabels[type]??documentTypeDefinitions[type].label}</span></button>})}</div></main>
+  <aside className="rounded-2xl border bg-card p-3 shadow-sm"><div className="rounded-xl bg-slate-950 p-4 text-white">{session.authenticated?<><p className="text-xs font-semibold text-blue-300">Nastavite gdje ste stali</p><h2 className="mt-1 font-semibold">Vaš workspace je spreman.</h2><p className="mt-2 text-xs leading-5 text-slate-400">Otvorite novi dokument ili pregledajte svoje spremljene dokumente.</p><div className="mt-4 grid gap-2"><Link href="/wizard" className={buttonVariants({size:"sm"})}>Novi dokument</Link><Link href="/documents" className={buttonVariants({variant:"outline",size:"sm"})}>Moji dokumenti</Link></div></>:<><p className="text-xs font-semibold text-blue-300">Otvorite besplatan račun</p><h2 className="mt-1 text-lg font-semibold">FREE</h2><ul className="mt-3 space-y-2 text-xs text-slate-300">{["Prvi dokument besplatno","PDF i Word izvoz","Automatsko spremanje","Pristup s telefona i računala"].map(item=><li key={item} className="flex gap-2"><Check className="size-3.5 text-emerald-400"/>{item}</li>)}</ul><div className="mt-4 grid grid-cols-2 gap-2"><Link onClick={()=>trackLandingEvent("signup_clicked")} href="/register" className={buttonVariants({size:"sm"})}>Registriraj se</Link><Link onClick={()=>trackLandingEvent("login_clicked")} href="/login" className={buttonVariants({variant:"outline",size:"sm"})}>Prijavi se</Link></div></>}</div><div className="mt-3"><div className="flex items-center justify-between"><p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Planovi</p><Link onClick={()=>trackLandingEvent("pricing_opened")} href="/pricing" className="text-[11px] font-semibold text-blue-700">Svi planovi</Link></div><div className="mt-2 grid gap-1.5">{[["FREE","Besplatno","Osnovni dokumenti · PDF"],["PRO","Uskoro","Svi dokumenti · više predložaka"],["BUSINESS","Kontakt","Timovi · više firmi"]].map(([name,price,text])=><div key={name} className="flex items-center justify-between rounded-lg border px-2.5 py-2"><span><b className="block text-[11px]">{name}</b><span className="text-[9px] text-muted-foreground">{text}</span></span><span className="text-[10px] font-semibold">{price}</span></div>)}</div></div></aside>
+  </div></section>}

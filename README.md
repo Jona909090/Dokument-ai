@@ -1,5 +1,11 @@
 # Dokument AI
 
+## Premium AI-first početna stranica
+
+Početna stranica objedinjuje dva stvarna toka: lokalno prepoznavanje zahtjeva u velikom prompt polju i ručni katalog svih registriranih dokumenata. Suggestion engine ne šalje prompt van aplikacije, ne izmišlja sadržaj i u analitiku sprema samo tip dokumenta, kategoriju, raspon pouzdanosti i ishod. Odabrani tip i originalni tekst prenose se postojećem wizardu putem URL parametara.
+
+Landing uključuje quick actions, klikabilne primjere, pretragu i kategorije svih obrazaca, omiljene u trenutačnoj sesiji, product preview, proces rada, stvarno označene mogućnosti, before/after, template/paper showcase, responsive header/footer i reduced-motion ponašanje.
+
 Dokument AI je Next.js SaaS sučelje za izradu, pregled, lokalno spremanje i izvoz poslovnih i osobnih dokumenata. Trenutačna razvojna faza radi potpuno lokalno i ne zahtijeva korisnički račun ni vanjski backend.
 
 ## Trenutačne funkcionalnosti
@@ -199,6 +205,66 @@ Stripe kuponi moraju imati povezani interni zapis prije produkcijske upotrebe. `
 - testirati Checkout, failed payment, grace period i otkazivanje u Stripe test modu
 - uključiti porezni sloj samo nakon zasebne Stripe Tax konfiguracije
 - provjeriti webhook reconciliation prije uključivanja live ključeva
+
+## Globalni design system dokumenata
+
+`src/lib/document-design` je jedini izvor design tokena za dokumente. `DocumentStyleConfig` verzije 2 sadrži temu, font par, boje, gustoću, header/footer/table/section/total/signature varijante, papir, margine i watermark. Novi i stari spremljeni dokumenti prolaze kroz `migrateDocumentStyle`; dokument bez konfiguracije dobiva siguran, dokument-specifičan default bez gubitka sadržaja.
+
+Ugrađene teme su Corporate Blue, Executive Black, Construction Orange, Minimal Gray, Modern Green, Elegant Gold, Professional Navy, Clean White, Technical Steel, Classic Business, Premium Dark Header i Soft Modern. One mijenjaju kombinaciju tipografije, headera, tablice, sekcija, sažetaka, gustoće i palete, a ne samo jednu boju. Font kombinacije su Inter/Source Sans, Montserrat/Open Sans, Lato/Merriweather, Roboto/Roboto Slab, Poppins/Noto Sans, Work Sans/Source Serif i IBM Plex Sans/Serif.
+
+Generator ima Simple način za sadržaj i osnovni style panel te Advanced način koji dodatno otvara Template Engine i visibility kontrole. Promjena načina ne resetira formu. Style panel mijenja temu, fontove, boju, gustoću, header, tablicu, font size, margine i watermark u live A4 prikazu. Preview ima zoom 50–150%, fit page, prikaz margina i fullscreen modal. CSS tokeni se primjenjuju na sve specijalizirane sheet komponente, uz poseban karakter za CV, financijske dokumente, ponudu, narudžbenicu, tehničke izvještaje, primopredaju i poslovno pismo.
+
+Generički PDF i DOCX čitaju isti style config za boje, tipografiju, margine, orijentaciju, tablice, header i footer. Specijalizirani invoice/quotation/purchase-order/report exporteri zadržavaju vlastiti provjereni višestranični layout; njihovo potpuno mapiranje svih novih header/footer/table varijanti ostaje zaseban posao i ne prikazuje se kao dovršen. Print koristi iste CSS tokene kao preview. Zabranjeni generički marketinški podnaslov uklonjen je iz previewa, PDF-a i DOCX-a.
+
+Dodavanje nove teme zahtijeva novi zapis u `documentThemes`; dodavanje novog dokumenta zahtijeva njegov default u `characterThemes` i style test. Brand Kit tip i default-by-document ugovor su pripremljeni, ali cloud CRUD za više Brand Kitova zahtijeva Supabase migraciju i nije simuliran lokalnim kontrolama.
+
+### Paper Design Engine
+
+`PaperDesignConfig` je dio svakog `DocumentStyleConfig` zapisa i definira boju/intenzitet papira, uzorak, dekorativne linije i oblike, sigurnu zonu, varijante stranica te print-safe/crno-bijeli prikaz. Stari dokument bez paper konfiguracije automatski dobiva bijeli papir, bez uzorka, sa sigurnom zonom i uključenim Print Safe Modeom.
+
+Paleta uključuje čistu, toplu i hladnu bijelu, svijetlosivu, krem, slonovaču, vrlo svijetloplavu, vrlo svijetlozelenu, vrlo svijetlobež i svijetli pijesak te vlastiti HEX unos. Panel provjerava WCAG kontrast teksta i papira, nudi automatsku korekciju i prikazuje informativnu malu/srednju/veliku potrošnju tinte.
+
+Uzorci su horizontalne/vertikalne/diagonalne linije, tehnička i točkasta mreža, geometrija, kutni detalji, bočne/gornje/donje linije, okvir, blueprint, construction grid, valovi, minimalni oblici, elegantne krivulje i papirna tekstura. Dekorativni slojevi su uvijek ispod sadržaja, potpisa, pečata, headera i footera. Print Safe smanjuje intenzitet dekoracija, a crno-bijeli preview koristi grayscale bez promjene spremljenih podataka.
+
+Ugrađeni preseti su Pure White, Warm Ivory, Corporate Blue Line, Minimal Gray, Technical Grid, Construction Blueprint Light, Elegant Gold Accent, Executive Dark Header, Soft Green, Classic Border, Modern Geometry, Clean Letterhead, Subtle Waves, Industrial Steel i Custom. Svaka vrsta dokumenta dobiva primjeren paper default. `paper-store.ts` podržava lokalni ugovor za dupliciranje, spremanje, preimenovanje, brisanje korisničkog preseta, zadane veze po firmi/tipu, recent colors te JSON import/export. Sistemski preset se ne može spremiti kao izmijenjeni bez dupliciranja.
+
+Live preview i Print prenose boju, CSS uzorke, linije, oblike i watermark. Generički PDF prenosi boju papira, print-safe linije, podržane mreže i okvir; složene valove/krivulje pojednostavljuje. DOCX pouzdano prenosi boje teksta, tipografiju, margine, header i tablice, ali Word nema stabilan ekvivalent za sve pozadinske CSS slojeve pa se napredni uzorci namjerno svode na neutralni dokument umjesto rizične pozadinske slike.
+
+## Universal Document Composer
+
+Composer je opt-in Advanced editor nad `GeneratedDocument.composer`. Centralni `ContentBlock` model sadrži type, content, position, visibility, style, layout/width, page behavior, siguran data binding, uvjete, locking, metadata i opcionalnu djecu. Registry sadrži 40+ poslovnih, tabličnih, vizualnih, strukturnih i građevinskih blokova. Dodavanje novog tipa zahtijeva definiciju u `src/lib/composer/registry.ts` i renderer granu; sadržaj mora ostati JSON-serializable.
+
+Korisnik može stvarno dodati, urediti, duplicirati, sakriti, zaključati, obrisati i premjestiti blok. Native drag-and-drop podržava biblioteku → dokument i promjenu redoslijeda; tipkovno pristupačne kontrole Gore/Dolje daju isti rezultat. Brisanje traži potvrdu i može se vratiti lokalnim Composer Undo/Redo stackom. Svaka promjena ide kroz parent `updateLive`, pa koristi postojeći debounce autosave i history dokumenta.
+
+Binding engine prihvaća samo ograničene property putanje poput `company.name`; blokira `constructor`, `prototype`, `__proto__`, funkcije i proizvoljan kod. Condition builder model podržava empty/not-empty, equals/not-equals, numeričke usporedbe i contains. Ograničeni formula engine podržava sum, multiply, percent, average, min i max bez `eval`.
+
+`migrateGeneratedDocument` nedestruktivno pretvara naslov, popunjena generička polja, stavke i financijski sažetak u blokove. Izvorni dokument se ne mijenja. Specijalizirani invoice/quotation/purchase-order/construction modeli nisu automatski konvertirani jer parcijalna migracija može izgubiti porezne stope, potpise, fotografije ili tehničke tablice; Composer se za njih uključuje samo svjesno i postojeći model ostaje spremljen uz block model.
+
+Preview i Print koriste `ComposerRenderer` i isti grid od 12 kolona. PDF i DOCX čuvaju redoslijed, tekst, osnovne tablice, vidljivost, page-break i keep-together semantiku. DOCX pojednostavljuje grid širine, napredne CSS callout stilove, pozadinske slojeve i nestandardne vizualne blokove u stabilne Word paragrafe/tablice. Rich text je trenutno siguran plain-text sadržaj; proizvoljan HTML se ne renderira.
+
+Cover page/master-page tipovi, reusable block tip, nested section model i page behavior ugovori su pripremljeni. Potpuni vizualni builders za custom tablice/sekcije, reusable cloud biblioteku, AI block akcije, master page UI, cross-page canvas drop, organizacijski locking i Supabase version history nisu predstavljeni kao dovršene funkccije.
+
+## Project management i građevinska operativa
+
+Projektni workspace dostupan je na `/projects`. U lokalnom demo načinu koristi centralni `ProjectRepository`/`ProjectService` ugovor i podatke čuva u browseru. To omogućuje kreiranje, pretragu, dupliranje i arhiviranje projekta, uređivanje osnovnih postavki te stvarno dodavanje i promjenu statusa zadataka bez Supabase konfiguracije. Demo oznaka je namjerna: produkcijski podaci se ne izmišljaju.
+
+Svaki projekt ima pregled, zadatke/Kanban, dokumente, radnike i sate, materijale, opremu, troškove i budžet, probleme/rizike/nedostatke, fotografije, sastanke, izvještaje i postavke. Dashboard metrike računaju se iz operativnih zapisa. Dnevni izvještaj može se otvoriti kroz postojeći generator; ostali izvještaji su vidljivo onemogućeni dok projektni Supabase adapter nije povezan.
+
+Projektne uloge su `project_owner`, `project_manager`, `site_manager`, `foreman`, `engineer`, `supervisor`, `accountant`, `procurement`, `subcontractor_manager`, `worker` i `viewer`. Dozvole se provjeravaju u servisnom sloju, a migracija `202608010005_project_operations.sql` dodaje server-side projektne RLS funkcije i politike. Financijski modul je ograničen na uloge s financijskim pravima; UI skrivanje nije sigurnosna kontrola.
+
+Migracija proširuje postojeće projekte, faze, lokacije i dokumente te priprema zadatke i ovisnosti, radnike/ekipe/sate, materijalne zahtjeve/dostave/skladište, opremu, troškove/budžete, probleme/rizike, sastanke, fotografije, milestoneove, kalendar, approvals, checkliste, predloške i activity feed. Važni poslovni zapisi koriste `deleted_at`/`archived_at`, a veze prema projektu nemaju destruktivni cascade delete.
+
+Produkcijsko uključivanje:
+
+1. Primijeniti sve Supabase migracije redom i pregledati RLS u staging projektu.
+2. Implementirati Supabase `ProjectRepository` adapter nad istim ugovorom iz `src/lib/projects/repository.ts`.
+3. Učitavati svaki modul zasebnim paginiranim upitom; ne vraćati cijeli projektni snapshot u jednom produkcijskom zahtjevu.
+4. Za projektne fotografije koristiti privatni Storage i kratkotrajne signed URL-ove.
+5. Provjeriti projektne uloge na serveru za svaku write/approval/export radnju.
+
+Napredni drag-and-drop Gantt, puni kalendar, CSV import preview, offline sync, višekoračna approvals automatizacija, kompresija fotografija, specijalizirani CRUD obrasci svih modula i AI Project Copilot nisu predstavljeni kao završeni. Shema i servisne granice su pripremljene; AI akcije moraju dobiti samo dozvoljeni projektni kontekst i nikada ne smiju mijenjati podatke bez potvrde.
+
+Project domain testovi pokrivaju lifecycle projekta, spremanje zadatka, metrike i role/financial permissions. Pokrenite `npm run test`, `npm run lint` i `npm run build` prije primjene migracije.
 
 ## Platform Admin centar
 

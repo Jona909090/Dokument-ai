@@ -1,36 +1,3 @@
-import { CircleCheckBig, Download, MessageSquareText } from "lucide-react";
-
-const steps = [
-  { title: "Opišite dokument.", description: "Napišite kratko šta želite da pripremite i kome je dokument namenjen.", icon: MessageSquareText },
-  { title: "Unesite potrebne podatke.", description: "Dopunite važne detalje kroz jednostavna i jasno postavljena pitanja.", icon: CircleCheckBig },
-  { title: "Pregledajte i preuzmite dokument.", description: "Proverite sadržaj, unesite završne izmene i odaberite format.", icon: Download },
-];
-
-export function HowItWorks() {
-  return (
-    <section id="kako-funkcionise" className="scroll-mt-24 bg-slate-950 py-22 text-white sm:py-28">
-      <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-400">Jednostavan proces</p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Kako funkcioniše</h2>
-          <p className="mt-4 text-lg leading-7 text-slate-400">Od kratkog opisa do spremnog dokumenta u tri jasna koraka.</p>
-        </div>
-        <ol className="mt-12 grid gap-5 md:grid-cols-3">
-          {steps.map((step, index) => {
-            const Icon = step.icon;
-            return (
-              <li key={step.title} className="relative rounded-2xl border border-white/10 bg-white/[0.04] p-7">
-                <div className="flex items-center justify-between">
-                  <span className="flex size-12 items-center justify-center rounded-xl bg-blue-600"><Icon className="size-5" aria-hidden="true" /></span>
-                  <span className="text-5xl font-semibold text-white/50">0{index + 1}</span>
-                </div>
-                <h3 className="mt-7 text-lg font-semibold">{step.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-slate-400">{step.description}</p>
-              </li>
-            );
-          })}
-        </ol>
-      </div>
-    </section>
-  );
-}
+import { CircleCheckBig, Download, MessageSquareText, SlidersHorizontal } from "lucide-react";
+const steps = [{ title: "Opišite što trebate", description: "Upišite zadatak svojim riječima; puni tekst ostaje izvan analitike.", icon: MessageSquareText }, { title: "Potvrdite dokument", description: "Lokalni parser predlaže postojeće obrasce, a vi birate pravi.", icon: CircleCheckBig }, { title: "Uredite sadržaj i izgled", description: "Dopunite podatke, vidljivost, predložak i papir.", icon: SlidersHorizontal }, { title: "Preuzmite PDF ili Word", description: "Pregledajte rezultat i izvezite potvrđenu verziju.", icon: Download }];
+export function HowItWorks() { return <section id="kako-radi" className="scroll-mt-24 bg-slate-950 py-20 text-white sm:py-28"><div className="mx-auto max-w-7xl px-4 sm:px-8 lg:px-10"><div className="mx-auto max-w-2xl text-center"><p className="text-sm font-semibold uppercase tracking-[.18em] text-blue-400">Jasan proces</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">Kako radi</h2><p className="mt-4 text-lg text-slate-400">Četiri koraka od opisa do spremnog dokumenta.</p></div><ol className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-4">{steps.map((step, index) => { const Icon = step.icon; return <li key={step.title} className="rounded-2xl border border-white/10 bg-white/[.04] p-5 transition hover:-translate-y-1 hover:bg-white/[.07]"><div className="flex items-center justify-between"><span className="flex size-11 items-center justify-center rounded-xl bg-blue-600"><Icon className="size-5"/></span><span className="text-4xl font-semibold text-white/25">0{index + 1}</span></div><div className="mt-5 h-24 rounded-xl border border-white/10 bg-slate-950/60 p-3" aria-hidden="true">{index === 0 && <><div className="h-2 w-20 rounded bg-slate-600"/><div className="mt-3 h-8 rounded border border-blue-400/30 bg-blue-500/10"/></>}{index === 1 && <><div className="text-[9px] text-blue-300">Prepoznali smo:</div><div className="mt-2 rounded-lg bg-blue-600 px-3 py-2 text-[10px] font-bold">Ponuda ✓</div></>}{index === 2 && <div className="grid grid-cols-2 gap-2"><div className="space-y-2">{[1,2,3].map(i=><div key={i} className="h-3 rounded bg-slate-700"/>)}</div><div className="h-16 rounded bg-white p-2"><div className="h-1.5 bg-blue-600"/></div></div>}{index === 3 && <div className="flex h-full items-center justify-center gap-2"><span className="rounded-lg bg-blue-600 px-3 py-2 text-[10px]">PDF</span><span className="rounded-lg border border-white/20 px-3 py-2 text-[10px]">Word</span></div>}</div><h3 className="mt-5 font-semibold">{step.title}</h3><p className="mt-2 text-sm leading-6 text-slate-400">{step.description}</p></li>; })}</ol></div></section>; }

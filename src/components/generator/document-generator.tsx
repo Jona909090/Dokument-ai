@@ -10,6 +10,8 @@ import {
   Redo2,
   Search,
   ShieldCheck,
+  SlidersHorizontal,
+  Sparkles,
   Undo2,
 } from "lucide-react";
 
@@ -21,6 +23,8 @@ import { DocumentPreview } from "@/components/generator/document-preview";
 import { InlineA4Preview } from "@/components/generator/inline-a4-preview";
 import { DocumentVisibilityPanel } from "@/components/generator/visibility-controls";
 import { TemplateSelector } from "@/components/templates/template-selector";
+import { DocumentStylePanel } from "@/components/generator/document-style-panel";
+import { ComposerPanel } from "@/components/composer/composer-panel";
 import { DailyReportForm } from "@/components/generator/daily-report-form";
 import { CompletedWorksReportForm } from "@/components/generator/completed-works-report-form";
 import { WorkHandoverForm } from "@/components/generator/work-handover-form";
@@ -38,6 +42,8 @@ import { saveEditorDraft } from "@/lib/data/draft-service";
 import { cn } from "@/lib/utils";
 import { normalizeDocumentVisibility, type DocumentVisibilitySettings } from "@/lib/document-visibility";
 import { loadDefaultVisibility } from "@/lib/visibility-profile-store";
+import { defaultDocumentStyle, migrateDocumentStyle } from "@/lib/document-design";
+import { migrateGeneratedDocument, type ComposerDocument } from "@/lib/composer";
 
 type DocumentGeneratorProps = {
   initialType: DocumentType;
@@ -53,6 +59,7 @@ function emptyDocument(
     title: documentTypeDefinitions[type].label,
     locale,
     fields: [],
+    style: defaultDocumentStyle(type),
   };
 }
 
@@ -71,8 +78,11 @@ export function DocumentGenerator({
     emptyDocument(initialType, "hr"),
   );
   const visibilityRef = useRef<DocumentVisibilitySettings | undefined>(undefined);
+  const styleRef = useRef(defaultDocumentStyle(initialType));
+  const composerRef = useRef<ComposerDocument | undefined>(undefined);
   const [modal, setModal] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [editorMode, setEditorMode] = useState<"simple" | "advanced">("simple");
   const [, forceHistoryRender] = useState(0);
   const [historyState, setHistoryState] = useState({
     canUndo: false,
@@ -89,7 +99,10 @@ export function DocumentGenerator({
   );
 
   const updateLive = useCallback((next: GeneratedDocument) => {
-    next = { ...next, visibility: visibilityRef.current };
+    const style = migrateDocumentStyle(next.style ?? styleRef.current, next.type);
+    next = { ...next, visibility: visibilityRef.current, style, composer: next.composer ?? composerRef.current };
+    styleRef.current = style;
+    composerRef.current = next.composer;
     next.visibility = normalizeDocumentVisibility(next);
     visibilityRef.current = next.visibility;
     setLiveDocument(next);
@@ -107,6 +120,8 @@ export function DocumentGenerator({
       setSaved(true);
     }, 800);
   }, []);
+  function updateStyle(style: NonNullable<GeneratedDocument["style"]>) { styleRef.current = style; updateLive({ ...liveDocument, style }); }
+  function updateComposer(composer:ComposerDocument){composerRef.current=composer;updateLive({...liveDocument,composer})}
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const saved = loadDefaultVisibility(type);
@@ -127,6 +142,8 @@ export function DocumentGenerator({
 
   function changeType(nextType: DocumentType) {
     visibilityRef.current = loadDefaultVisibility(nextType);
+    styleRef.current = defaultDocumentStyle(nextType);
+    composerRef.current = undefined;
     setType(nextType);
     setLiveDocument({
       ...emptyDocument(nextType, locale),
@@ -295,11 +312,9 @@ export function DocumentGenerator({
               )}
             </div>
             <div className="rounded-3xl border bg-card p-5 shadow-sm sm:p-7">
-              <div className="mb-4"><TemplateSelector type={type} /></div>
-              <DocumentVisibilityPanel
-                document={liveDocument}
-                onChange={updateVisibility}
-              />
+              <div className="sticky top-20 z-20 -mx-2 mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-background/95 p-2 shadow-sm backdrop-blur"><div className="inline-flex rounded-xl bg-muted p-1" aria-label="Način uređivanja"><button type="button" onClick={()=>setEditorMode("simple")} className={cn("inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold",editorMode==="simple"&&"bg-card shadow-sm")}><Sparkles className="size-3.5"/>Simple</button><button type="button" onClick={()=>setEditorMode("advanced")} className={cn("inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold",editorMode==="advanced"&&"bg-card shadow-sm")}><SlidersHorizontal className="size-3.5"/>Advanced</button></div><span className="text-xs text-muted-foreground">Podaci ostaju sačuvani pri promjeni načina</span></div>
+              {liveDocument.style&&<DocumentStylePanel style={liveDocument.style} onChange={updateStyle}/>}
+              {editorMode === "advanced" && <><div className="mb-4"><TemplateSelector type={type} /></div><DocumentVisibilityPanel document={liveDocument} onChange={updateVisibility}/>{liveDocument.composer?<ComposerPanel value={liveDocument.composer} onChange={updateComposer}/>:<button type="button" onClick={()=>updateComposer(migrateGeneratedDocument(liveDocument))} className="mb-5 w-full rounded-2xl border border-dashed p-5 text-sm font-semibold hover:border-primary hover:bg-primary/5">Uključi Universal Composer za ovaj dokument</button>}</>}
               {type === "work-handover" ? (
                 <WorkHandoverForm key={type} locale={locale} onPreview={() => setModal(true)} onLiveChange={updateLive} />
               ) : type === "completed-works-report" ? (

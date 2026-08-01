@@ -1,5 +1,6 @@
 "use client";
-import { Download, Eye, FileText } from "lucide-react";
+import { Download, Eye, FileText, Maximize2, Minus, Plus } from "lucide-react";
+import { useState } from "react";
 import { PurchaseOrderSheet } from "@/components/generator/purchase-order-sheet";
 import { QuotationSheet } from "@/components/generator/quotation-sheet";
 import { InvoiceSheet } from "@/components/generator/invoice-sheet";
@@ -15,6 +16,7 @@ import { DailyReportSheet } from "@/components/generator/daily-report-sheet";
 import { CompletedWorksReportSheet } from "@/components/generator/completed-works-report-sheet";
 import { WorkHandoverSheet } from "@/components/generator/work-handover-sheet";
 import { TemplateSurface } from "@/components/templates/template-surface";
+import { ComposerRenderer } from "@/components/composer/block-renderer";
 export function InlineA4Preview({
   document,
   onExpand,
@@ -22,6 +24,8 @@ export function InlineA4Preview({
   document: GeneratedDocument;
   onExpand: () => void;
 }) {
+  const [zoom,setZoom]=useState(100);
+  const [showMargins,setShowMargins]=useState(false);
   const visibleDocument = buildVisibleDocumentModel(document);
   async function exportDocument(format: "pdf" | "docx") {
     if (format === "pdf") await downloadPdf(document);
@@ -47,9 +51,10 @@ export function InlineA4Preview({
           Uživo
         </span>
       </div>
-      <div className="aspect-[210/297] w-full overflow-hidden rounded-xl border bg-white shadow-2xl">
-        <TemplateSurface type={document.type} className="h-full">
-        {visibleDocument.workHandover ? (
+      <div className="mb-3 flex flex-wrap items-center gap-1 rounded-xl border bg-card p-1" aria-label="Kontrole pregleda"><button type="button" onClick={()=>setZoom(v=>Math.max(50,v-10))} className="rounded-lg p-2 hover:bg-muted" aria-label="Smanji pregled"><Minus className="size-3.5"/></button><span className="min-w-12 text-center text-xs font-semibold">{zoom}%</span><button type="button" onClick={()=>setZoom(v=>Math.min(150,v+10))} className="rounded-lg p-2 hover:bg-muted" aria-label="Povećaj pregled"><Plus className="size-3.5"/></button><button type="button" onClick={()=>setZoom(100)} className="rounded-lg px-2 py-1.5 text-xs hover:bg-muted">Fit page</button><button type="button" onClick={()=>setShowMargins(v=>!v)} className={`rounded-lg px-2 py-1.5 text-xs ${showMargins?'bg-muted':''}`}>Margine</button><button type="button" onClick={onExpand} className="ml-auto rounded-lg p-2 hover:bg-muted" aria-label="Cijeli zaslon"><Maximize2 className="size-3.5"/></button></div>
+      <div className={`aspect-[210/297] w-full overflow-hidden rounded-xl border bg-white shadow-2xl ${showMargins?'ring-2 ring-inset ring-dashed ring-blue-400':''}`}>
+        <div className="h-full origin-top-left" style={{transform:`scale(${zoom/100})`,width:`${10000/zoom}%`,height:`${10000/zoom}%`}}><TemplateSurface type={document.type} style={visibleDocument.style} className="h-full">
+        {visibleDocument.composer ? <ComposerRenderer composer={visibleDocument.composer} compact /> : visibleDocument.workHandover ? (
           <WorkHandoverSheet data={visibleDocument.workHandover} compact />
         ) : visibleDocument.completedWorksReport ? (
           <CompletedWorksReportSheet data={visibleDocument.completedWorksReport} compact />
@@ -72,7 +77,7 @@ export function InlineA4Preview({
         ) : (
           <GenericSheet document={visibleDocument} />
         )}
-        </TemplateSurface>
+        </TemplateSurface></div>
       </div>
       <div className="mt-4 grid grid-cols-3 gap-2">
         <Button size="sm" variant="outline" onClick={onExpand}>
@@ -99,11 +104,10 @@ function GenericSheet({ document }: { document: GeneratedDocument }) {
   return (
     <article className="h-full p-[7%] text-[7px] leading-relaxed text-slate-800">
       <header className="flex justify-between border-b pb-3">
-        <span className="font-bold text-blue-600">DOKUMENT AI</span>
-        <span>{document.title}</span>
+        <span className="font-bold" style={{color:"var(--doc-accent)"}}>{document.title}</span>
+        <span>{document.locale.toUpperCase()}</span>
       </header>
       <h2 className="mt-5 text-[16px] font-bold">{document.title}</h2>
-      <p className="mt-1 text-slate-400">Profesionalno pripremljen dokument</p>
       <div className="mt-5 grid grid-cols-2 gap-3">
         {document.fields
           .filter((f) => f.value)

@@ -6,6 +6,8 @@ import type { DocumentVisibilitySettings } from "@/lib/document-visibility";
 import type { DailyReportData } from "@/lib/daily-report";
 import type { CompletedWorksReportData } from "@/lib/completed-works-report";
 import type { WorkHandoverData } from "@/lib/work-handover";
+import type { DocumentStyleConfig } from "@/lib/document-design";
+import type { ComposerDocument } from "@/lib/composer";
 
 export type DocumentLocale = "hr" | "en";
 
@@ -50,6 +52,8 @@ export type GeneratedDocument = {
   dailyReport?: DailyReportData;
   completedWorksReport?: CompletedWorksReportData;
   workHandover?: WorkHandoverData;
+  style?: DocumentStyleConfig;
+  composer?: ComposerDocument;
 };
 
 export function formatDocumentDate(value: string, locale: DocumentLocale) {

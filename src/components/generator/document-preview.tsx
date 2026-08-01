@@ -22,6 +22,7 @@ import { DailyReportSheet } from "@/components/generator/daily-report-sheet";
 import { CompletedWorksReportSheet } from "@/components/generator/completed-works-report-sheet";
 import { WorkHandoverSheet } from "@/components/generator/work-handover-sheet";
 import { TemplateSurface } from "@/components/templates/template-surface";
+import { ComposerRenderer } from "@/components/composer/block-renderer";
 
 const euro = new Intl.NumberFormat("hr-HR", {
   style: "currency",
@@ -186,7 +187,7 @@ export function DocumentPreview({
           </div>
         )}
 
-        <TemplateSurface type={document.type}>{visibleDocument.workHandover ? (
+        <TemplateSurface type={document.type} style={visibleDocument.style}>{visibleDocument.composer ? <div className="mx-auto max-w-[210mm] shadow-2xl"><ComposerRenderer composer={visibleDocument.composer}/></div> : visibleDocument.workHandover ? (
           <div className="mx-auto max-w-[210mm] shadow-2xl"><WorkHandoverSheet data={visibleDocument.workHandover} /></div>
         ) : visibleDocument.completedWorksReport ? (
           <div className="mx-auto max-w-[210mm] shadow-2xl"><CompletedWorksReportSheet data={visibleDocument.completedWorksReport} /></div>
@@ -222,11 +223,7 @@ export function DocumentPreview({
                   unoptimized
                   className="max-h-12 max-w-36 object-contain"
                 />
-              ) : (
-                <span className="text-sm font-bold tracking-wider text-blue-600">
-                  DOKUMENT AI
-                </span>
-              )}
+              ) : <span aria-hidden="true" />}
               <span className="text-right text-xs text-slate-400">
                 {visibleDocument.title}
               </span>
@@ -236,11 +233,6 @@ export function DocumentPreview({
               <h1 className="text-3xl font-bold tracking-tight text-slate-950">
                 {visibleDocument.title}
               </h1>
-              <p className="mt-2 text-sm text-slate-500">
-                {visibleDocument.locale === "hr"
-                  ? "Profesionalno pripremljen dokument"
-                  : "Professionally prepared document"}
-              </p>
               <dl className="mt-9 grid gap-x-8 gap-y-5 sm:grid-cols-2">
                 {visibleDocument.fields.map((field) => (
                   <div

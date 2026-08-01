@@ -37,3 +37,11 @@ export function trackEvent(eventName: AnalyticsEventName, metadata: AnalyticsMet
 }
 
 export function getLocalAnalyticsEvents() { return adapter.readEvents(); }
+
+export const landingEventNames = ["hero_prompt_started", "hero_prompt_submitted", "document_suggestion_shown", "document_suggestion_selected", "quick_action_selected", "manual_document_selected", "template_showcase_opened", "landing_cta_clicked", "smart_prompt_started", "smart_prompt_submitted", "suggested_document_selected", "frequent_document_selected", "signup_clicked", "login_clicked", "pricing_opened", "free_plan_selected", "help_opened"] as const;
+export type LandingEventName = (typeof landingEventNames)[number];
+export function trackLandingEvent(eventName: LandingEventName, metadata: { documentType?: DocumentType; confidence?: "low" | "medium" | "high"; success?: boolean } = {}) {
+  if (typeof window === "undefined") return;
+  const safeEvent = { event_id: crypto.randomUUID(), event_name: eventName, anonymous_session_id: sessionId(), document_type: metadata.documentType, document_category: metadata.documentType ? categoryForDocument(metadata.documentType) : undefined, confidence: metadata.confidence, success: metadata.success, device_type: deviceType(), created_at: new Date().toISOString() };
+  try { const key = "dokument-ai-landing-events"; const current = JSON.parse(localStorage.getItem(key) ?? "[]") as unknown[]; localStorage.setItem(key, JSON.stringify([...current, safeEvent].slice(-500))); } catch { /* Analytics must never block navigation. */ }
+}

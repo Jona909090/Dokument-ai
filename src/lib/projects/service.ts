@@ -1,0 +1,16 @@
+import type { ProjectRepository, ProjectQuery } from "./repository";
+import type { OperationalEntityKey, Project, ProjectMetrics, ProjectRole, ProjectSection, ProjectSnapshot } from "./types";
+import { requireProjectPermission } from "./permissions";
+
+export class ProjectService {
+  constructor(private readonly repository: ProjectRepository, private readonly role: ProjectRole = "project_owner") {}
+  list(query?: ProjectQuery) { return this.repository.list(query); }
+  async get(id: string, section: ProjectSection = "overview") { requireProjectPermission(this.role, section, "read"); return this.repository.get(id); }
+  saveProject(project: Project) { requireProjectPermission(this.role, "settings", "update"); return this.repository.saveProject(project); }
+  duplicateProject(id: string) { requireProjectPermission(this.role, "settings", "create"); return this.repository.duplicateProject(id); }
+  archiveProject(id: string, archived: boolean) { requireProjectPermission(this.role, "settings", "update"); return this.repository.archiveProject(id, archived); }
+  saveEntity<K extends OperationalEntityKey>(projectId: string, section: ProjectSection, key: K, entity: ProjectSnapshot[K][number]) { requireProjectPermission(this.role, section, entity.id ? "update" : "create"); return this.repository.saveEntity(projectId, key, entity); }
+  deleteEntity<K extends OperationalEntityKey>(projectId: string, section: ProjectSection, key: K, id: string) { requireProjectPermission(this.role, section, "delete"); return this.repository.softDeleteEntity(projectId, key, id); }
+}
+export function calculateProjectMetrics(snapshot: ProjectSnapshot, today = new Date()): ProjectMetrics { const date = today.toISOString().slice(0, 10); const activeTasks = snapshot.tasks.filter((item) => !item.deletedAt && !["completed", "canceled", "archived"].includes(item.status)); const openIssues = snapshot.issues.filter((item) => !item.deletedAt && !["closed", "resolved", "canceled"].includes(item.status)); const totalCosts = snapshot.costs.filter((item) => !item.deletedAt).reduce((sum, item) => sum + item.total, 0); const completed = snapshot.tasks.filter((item) => item.status === "completed").length; return { openTasks: activeTasks.length, overdueTasks: activeTasks.filter((item) => item.dueDate < date).length, openIssues: openIssues.length, criticalIssues: openIssues.filter((item) => item.priority === "critical").length, workersToday: snapshot.workforce.filter((item) => item.date === date && item.status === "present").length, hoursToday: snapshot.workforce.filter((item) => item.date === date).reduce((sum, item) => sum + item.regularHours + item.overtimeHours, 0), materialAlerts: snapshot.materials.filter((item) => item.delivered - item.used - item.damaged - item.returned <= item.minimum).length, activeEquipment: snapshot.equipment.filter((item) => item.status === "in_use").length, totalCosts, budgetRemaining: snapshot.project.budget - totalCosts, completionRate: snapshot.tasks.length ? Math.round(completed / snapshot.tasks.length * 100) : 0 }; }
+export function projectDaysRemaining(project: Project, today = new Date()) { return Math.ceil((new Date(`${project.expectedEndDate}T23:59:59`).getTime() - today.getTime()) / 86_400_000); }
