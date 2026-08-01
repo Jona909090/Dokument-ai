@@ -171,7 +171,7 @@ export async function downloadInvoicePdf(document: GeneratedDocument) {
           data.globalDiscountRate,
           data.taxMode,
         );
-        return [
+        const base: Content[] = [
           String(index + 1),
           {
             stack: [
@@ -185,6 +185,8 @@ export async function downloadInvoicePdf(document: GeneratedDocument) {
           },
           String(item.quantity),
           item.unit,
+        ];
+        return data.showFinancials === false ? base : [...base,
           money(Math.round(item.unitPrice * 100), data),
           `${item.discountRate}%`,
           data.taxMode === "standard" || data.taxMode === "prilagođeno"
@@ -198,9 +200,9 @@ export async function downloadInvoicePdf(document: GeneratedDocument) {
       {
         table: {
           headerRows: 1,
-          widths: [20, "*", 30, 28, 56, 34, 28, 64],
+          widths: data.showFinancials === false ? [20, "*", 45, 35] : [20, "*", 30, 28, 56, 34, 28, 64],
           body: [
-            [
+            (data.showFinancials === false ? ["#", "Naziv / opis", "Kol.", "JM"] : [
               "#",
               "Naziv / opis",
               "Kol.",
@@ -209,7 +211,7 @@ export async function downloadInvoicePdf(document: GeneratedDocument) {
               "Pop.",
               "PDV",
               "Ukupno",
-            ].map((text) => ({
+            ]).map((text) => ({
               text,
               bold: true,
               color: "#fff",
@@ -266,7 +268,7 @@ export async function downloadInvoicePdf(document: GeneratedDocument) {
       },
     ],
   ];
-  content.push({
+  if (data.showFinancials !== false) content.push({
     table: { widths: [105, 85], body: totals },
     layout: "lightHorizontalLines",
     margin: [325, 12, 0, 0],
@@ -480,7 +482,7 @@ export async function downloadInvoiceDocx(document: GeneratedDocument) {
     const rows = [
       new TableRow({
         tableHeader: true,
-        children: [
+        children: (data.showFinancials === false ? ["#", "Naziv / opis", "Kol.", "JM"] : [
           "#",
           "Naziv / opis",
           "Kol.",
@@ -489,7 +491,7 @@ export async function downloadInvoiceDocx(document: GeneratedDocument) {
           "Pop.",
           "PDV",
           "Ukupno",
-        ].map(
+        ]).map(
           (v) =>
             new TableCell({
               shading: { fill: "1E293B" },
@@ -519,7 +521,12 @@ export async function downloadInvoiceDocx(document: GeneratedDocument) {
             data.taxMode,
           );
           return new TableRow({
-            children: [
+            children: (data.showFinancials === false ? [
+              String(index + 1),
+              [item.code, item.name, item.description, item.note].filter(Boolean).join("\n"),
+              String(item.quantity),
+              item.unit,
+            ] : [
               String(index + 1),
               [item.code, item.name, item.description, item.note]
                 .filter(Boolean)
@@ -530,7 +537,7 @@ export async function downloadInvoiceDocx(document: GeneratedDocument) {
               `${item.discountRate}%`,
               `${item.taxRate}%`,
               money(value.totalCents, data),
-            ].map(
+            ]).map(
               (v) =>
                 new TableCell({
                   children: v.split("\n").map((line) => p(line)),
@@ -543,7 +550,7 @@ export async function downloadInvoiceDocx(document: GeneratedDocument) {
       new Table({ width: { size: 9360, type: WidthType.DXA }, rows }),
     );
   }
-  children.push(
+  if (data.showFinancials !== false) children.push(
     new Paragraph({
       alignment: AlignmentType.RIGHT,
       children: [

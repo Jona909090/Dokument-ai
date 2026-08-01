@@ -2,6 +2,7 @@ import type { DocumentType } from "@/lib/document-types";
 import type { PurchaseOrderData } from "@/lib/purchase-order";
 import type { QuotationData } from "@/lib/quotation";
 import type { InvoiceData } from "@/lib/invoice";
+import type { DocumentVisibilitySettings } from "@/lib/document-visibility";
 
 export type DocumentLocale = "hr" | "en";
 
@@ -42,6 +43,7 @@ export type GeneratedDocument = {
   purchaseOrder?: PurchaseOrderData;
   quotation?: QuotationData;
   invoice?: InvoiceData;
+  visibility?: DocumentVisibilitySettings;
 };
 
 export function formatDocumentDate(value: string, locale: DocumentLocale) {

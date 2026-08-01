@@ -21,6 +21,8 @@ export type PurchaseOrderItem = {
   unitPrice: number;
   discountRate: number;
   taxRate: number;
+  isVisible?: boolean;
+  includeInCalculation?: boolean;
 };
 
 export type PurchaseOrderSignature = {
@@ -82,7 +84,7 @@ export function calculatePurchaseOrderItem(item: PurchaseOrderItem): PurchaseOrd
 }
 
 export function calculatePurchaseOrderTotals(items: PurchaseOrderItem[]): PurchaseOrderTotals {
-  return items.map(calculatePurchaseOrderItem).reduce(
+  return items.filter((item) => item.includeInCalculation !== false).map(calculatePurchaseOrderItem).reduce(
     (totals, item) => ({
       gross: totals.gross + item.gross,
       discount: totals.discount + item.discount,
@@ -100,5 +102,5 @@ export function localIsoDate(date = new Date()) {
 }
 
 export function emptyPurchaseOrderItem(id = crypto.randomUUID()): PurchaseOrderItem {
-  return { id, name: "", description: "", quantity: 1, unit: "kom", unitPrice: 0, discountRate: 0, taxRate: 25 };
+  return { id, name: "", description: "", quantity: 1, unit: "kom", unitPrice: 0, discountRate: 0, taxRate: 25, isVisible: true, includeInCalculation: true };
 }

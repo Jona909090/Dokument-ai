@@ -14,6 +14,7 @@ import {
   downloadQuotationPdf,
 } from "@/lib/quotation-export";
 import { downloadInvoiceDocx, downloadInvoicePdf } from "@/lib/invoice-export";
+import { buildVisibleDocumentModel } from "@/lib/document-visibility";
 
 const euro = new Intl.NumberFormat("hr-HR", {
   style: "currency",
@@ -29,6 +30,7 @@ function displayValue(
 }
 
 export async function downloadPdf(document: GeneratedDocument) {
+  document = buildVisibleDocumentModel(document);
   if (document.invoice) return downloadInvoicePdf(document);
   if (document.quotation) return downloadQuotationPdf(document);
   if (document.purchaseOrder) return downloadPurchaseOrderPdf(document);
@@ -256,6 +258,7 @@ function imageType(dataUrl: string): "jpg" | "png" {
 }
 
 export async function downloadDocx(documentData: GeneratedDocument) {
+  documentData = buildVisibleDocumentModel(documentData);
   if (documentData.invoice) return downloadInvoiceDocx(documentData);
   if (documentData.quotation) return downloadQuotationDocx(documentData);
   if (documentData.purchaseOrder)

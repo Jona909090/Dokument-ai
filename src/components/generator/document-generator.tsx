@@ -19,6 +19,7 @@ import { PurchaseOrderForm } from "@/components/generator/purchase-order-form";
 import { QuotationForm } from "@/components/generator/quotation-form";
 import { DocumentPreview } from "@/components/generator/document-preview";
 import { InlineA4Preview } from "@/components/generator/inline-a4-preview";
+import { DocumentVisibilityPanel } from "@/components/generator/visibility-controls";
 import { Button } from "@/components/ui/button";
 import {
   documentTypeDefinitions,
@@ -31,6 +32,8 @@ import type {
 } from "@/lib/generated-document";
 import { saveEditorDraft } from "@/lib/data/draft-service";
 import { cn } from "@/lib/utils";
+import { normalizeDocumentVisibility, type DocumentVisibilitySettings } from "@/lib/document-visibility";
+import { loadDefaultVisibility } from "@/lib/visibility-profile-store";
 
 type DocumentGeneratorProps = {
   initialType: DocumentType;
@@ -63,6 +66,7 @@ export function DocumentGenerator({
   const [liveDocument, setLiveDocument] = useState<GeneratedDocument>(() =>
     emptyDocument(initialType, "hr"),
   );
+  const visibilityRef = useRef<DocumentVisibilitySettings | undefined>(undefined);
   const [modal, setModal] = useState(false);
   const [saved, setSaved] = useState(false);
   const [, forceHistoryRender] = useState(0);
@@ -81,6 +85,9 @@ export function DocumentGenerator({
   );
 
   const updateLive = useCallback((next: GeneratedDocument) => {
+    next = { ...next, visibility: visibilityRef.current };
+    next.visibility = normalizeDocumentVisibility(next);
+    visibilityRef.current = next.visibility;
     setLiveDocument(next);
     history.current = [
       ...history.current.slice(0, historyIndex.current + 1),
@@ -96,10 +103,31 @@ export function DocumentGenerator({
       setSaved(true);
     }, 800);
   }, []);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const saved = loadDefaultVisibility(type);
+      if (!saved) return;
+      visibilityRef.current = saved;
+      setLiveDocument((current) => ({ ...current, visibility: saved }));
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [type]);
+  function updateVisibility(settings: DocumentVisibilitySettings) {
+    visibilityRef.current = settings;
+    setLiveDocument((current) => {
+      const next = { ...current, visibility: settings };
+      saveEditorDraft(next);
+      return next;
+    });
+  }
 
   function changeType(nextType: DocumentType) {
+    visibilityRef.current = loadDefaultVisibility(nextType);
     setType(nextType);
-    setLiveDocument(emptyDocument(nextType, locale));
+    setLiveDocument({
+      ...emptyDocument(nextType, locale),
+      visibility: visibilityRef.current,
+    });
     router.replace(`/generator?type=${nextType}`, { scroll: false });
   }
   function moveHistory(direction: -1 | 1) {
@@ -263,6 +291,10 @@ export function DocumentGenerator({
               )}
             </div>
             <div className="rounded-3xl border bg-card p-5 shadow-sm sm:p-7">
+              <DocumentVisibilityPanel
+                document={liveDocument}
+                onChange={updateVisibility}
+              />
               {type === "invoice" ? (
                 <InvoiceForm
                   key={type}

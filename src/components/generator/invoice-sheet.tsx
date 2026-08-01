@@ -241,10 +241,14 @@ export function InvoiceSheet({
                     <th className="p-1.5 text-left">{t.item}</th>
                     <th className="w-12 p-1.5 text-right">{t.qty}</th>
                     <th className="w-10 p-1.5 text-left">{t.unit}</th>
-                    <th className="w-16 p-1.5 text-right">{t.price}</th>
-                    <th className="w-12 p-1.5 text-right">{t.discount}</th>
-                    <th className="w-10 p-1.5 text-right">{t.tax}</th>
-                    <th className="w-20 p-1.5 text-right">{t.amount}</th>
+                    {data.showFinancials !== false && (
+                      <>
+                        <th className="w-16 p-1.5 text-right">{t.price}</th>
+                        <th className="w-12 p-1.5 text-right">{t.discount}</th>
+                        <th className="w-10 p-1.5 text-right">{t.tax}</th>
+                        <th className="w-20 p-1.5 text-right">{t.amount}</th>
+                      </>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -280,21 +284,14 @@ export function InvoiceSheet({
                             {item.quantity}
                           </td>
                           <td className="p-1.5">{item.unit}</td>
-                          <td className="p-1.5 text-right tabular-nums">
-                            {money(Math.round(item.unitPrice * 100), data)}
-                          </td>
-                          <td className="p-1.5 text-right">
-                            {item.discountRate}%
-                          </td>
-                          <td className="p-1.5 text-right">
-                            {data.taxMode === "standard" ||
-                            data.taxMode === "prilagođeno"
-                              ? `${item.taxRate}%`
-                              : "—"}
-                          </td>
-                          <td className="p-1.5 text-right font-medium tabular-nums">
-                            {money(value.totalCents, data)}
-                          </td>
+                          {data.showFinancials !== false && (
+                            <>
+                              <td className="p-1.5 text-right tabular-nums">{money(Math.round(item.unitPrice * 100), data)}</td>
+                              <td className="p-1.5 text-right">{item.discountRate}%</td>
+                              <td className="p-1.5 text-right">{data.taxMode === "standard" || data.taxMode === "prilagođeno" ? `${item.taxRate}%` : "—"}</td>
+                              <td className="p-1.5 text-right font-medium tabular-nums">{money(value.totalCents, data)}</td>
+                            </>
+                          )}
                         </tr>
                       );
                     })}
@@ -302,7 +299,7 @@ export function InvoiceSheet({
               </table>
             </section>
           ))}
-        <section className="ml-auto mt-4 w-[48%] break-inside-avoid rounded-lg border p-3 text-[10px]">
+        {data.showFinancials !== false && <section className="ml-auto mt-4 w-[48%] break-inside-avoid rounded-lg border p-3 text-[10px]">
           <div className="flex justify-between">
             <span>Bruto vrijednost</span>
             <span>{money(summary.grossCents, data)}</span>
@@ -360,7 +357,7 @@ export function InvoiceSheet({
             <span>{t.remaining}</span>
             <span>{money(summary.remainingCents, data)}</span>
           </div>
-        </section>
+        </section>}
         {data.showLegalNote && data.legalNote && (
           <section
             className="mt-4 break-inside-avoid rounded border-l-4 bg-slate-50 p-3 text-[9px]"

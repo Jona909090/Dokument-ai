@@ -17,6 +17,7 @@ import type { SavedDocument } from "@/lib/data/models";
 import { PurchaseOrderSheet } from "@/components/generator/purchase-order-sheet";
 import { QuotationSheet } from "@/components/generator/quotation-sheet";
 import { InvoiceSheet } from "@/components/generator/invoice-sheet";
+import { buildVisibleDocumentModel } from "@/lib/document-visibility";
 
 const euro = new Intl.NumberFormat("hr-HR", {
   style: "currency",
@@ -41,6 +42,7 @@ export function DocumentPreview({
   const [downloading, setDownloading] = useState<"pdf" | "docx" | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
+  const visibleDocument = buildVisibleDocumentModel(document);
 
   async function handleDownload(format: "pdf" | "docx") {
     setDownloading(format);
@@ -180,30 +182,30 @@ export function DocumentPreview({
           </div>
         )}
 
-        {document.invoice ? (
+        {visibleDocument.invoice ? (
           <div className="mx-auto max-w-[210mm] shadow-2xl">
-            <InvoiceSheet data={document.invoice} images={document.images} />
+            <InvoiceSheet data={visibleDocument.invoice} images={visibleDocument.images} />
           </div>
-        ) : document.quotation ? (
+        ) : visibleDocument.quotation ? (
           <div className="mx-auto max-w-[210mm] shadow-2xl">
             <QuotationSheet
-              data={document.quotation}
-              images={document.images}
+              data={visibleDocument.quotation}
+              images={visibleDocument.images}
             />
           </div>
-        ) : document.purchaseOrder ? (
+        ) : visibleDocument.purchaseOrder ? (
           <div className="mx-auto max-w-[210mm] shadow-2xl">
             <PurchaseOrderSheet
-              data={document.purchaseOrder}
-              images={document.images}
+              data={visibleDocument.purchaseOrder}
+              images={visibleDocument.images}
             />
           </div>
         ) : (
           <article className="mx-auto flex min-h-[297mm] w-full max-w-[210mm] flex-col bg-white px-[8%] py-10 text-slate-900 shadow-2xl sm:px-[18mm] sm:py-[16mm]">
             <header className="flex min-h-14 items-start justify-between gap-6 border-b border-blue-100 pb-5">
-              {document.images?.logo ? (
+              {visibleDocument.images?.logo ? (
                 <Image
-                  src={document.images.logo}
+                  src={visibleDocument.images.logo}
                   alt="Logotip firme"
                   width={144}
                   height={48}
@@ -216,21 +218,21 @@ export function DocumentPreview({
                 </span>
               )}
               <span className="text-right text-xs text-slate-400">
-                {document.title}
+                {visibleDocument.title}
               </span>
             </header>
 
             <div className="flex-1 py-9">
               <h1 className="text-3xl font-bold tracking-tight text-slate-950">
-                {document.title}
+                {visibleDocument.title}
               </h1>
               <p className="mt-2 text-sm text-slate-500">
-                {document.locale === "hr"
+                {visibleDocument.locale === "hr"
                   ? "Profesionalno pripremljen dokument"
                   : "Professionally prepared document"}
               </p>
               <dl className="mt-9 grid gap-x-8 gap-y-5 sm:grid-cols-2">
-                {document.fields.map((field) => (
+                {visibleDocument.fields.map((field) => (
                   <div
                     key={`${field.label}-${field.value}`}
                     className={
@@ -242,14 +244,14 @@ export function DocumentPreview({
                     </dt>
                     <dd className="mt-1.5 whitespace-pre-wrap text-sm leading-6">
                       {field.type === "date"
-                        ? formatDocumentDate(field.value, document.locale)
+                        ? formatDocumentDate(field.value, visibleDocument.locale)
                         : field.value || "-"}
                     </dd>
                   </div>
                 ))}
               </dl>
 
-              {document.items?.length ? (
+              {visibleDocument.items?.length ? (
                 <div className="mt-10 overflow-x-auto">
                   <h2 className="mb-4 text-lg font-semibold text-blue-900">
                     Stavke
@@ -264,7 +266,7 @@ export function DocumentPreview({
                       </tr>
                     </thead>
                     <tbody>
-                      {document.items.map((item, index) => (
+                      {visibleDocument.items.map((item, index) => (
                         <tr
                           key={`${item.description}-${index}`}
                           className="border-b"
@@ -284,29 +286,29 @@ export function DocumentPreview({
                 </div>
               ) : null}
 
-              {document.totals && (
+              {visibleDocument.totals && (
                 <dl className="ml-auto mt-6 max-w-xs space-y-2 text-sm">
                   <div className="flex justify-between">
                     <dt>Ukupno bez PDV-a</dt>
-                    <dd>{euro.format(document.totals.subtotal)}</dd>
+                    <dd>{euro.format(visibleDocument.totals.subtotal)}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt>PDV ({document.totals.taxRate}%)</dt>
-                    <dd>{euro.format(document.totals.tax)}</dd>
+                    <dt>PDV ({visibleDocument.totals.taxRate}%)</dt>
+                    <dd>{euro.format(visibleDocument.totals.tax)}</dd>
                   </div>
                   <div className="flex justify-between border-t pt-2 font-bold text-blue-700">
                     <dt>Ukupno s PDV-om</dt>
-                    <dd>{euro.format(document.totals.total)}</dd>
+                    <dd>{euro.format(visibleDocument.totals.total)}</dd>
                   </div>
                 </dl>
               )}
 
-              {(document.images?.signature || document.images?.stamp) && (
+              {(visibleDocument.images?.signature || visibleDocument.images?.stamp) && (
                 <div className="mt-12 flex justify-end gap-8">
-                  {document.images.signature && (
+                  {visibleDocument.images?.signature && (
                     <figure className="text-center">
                       <Image
-                        src={document.images.signature}
+                        src={visibleDocument.images.signature}
                         alt="Potpis"
                         width={160}
                         height={64}
@@ -318,10 +320,10 @@ export function DocumentPreview({
                       </figcaption>
                     </figure>
                   )}
-                  {document.images.stamp && (
+                  {visibleDocument.images?.stamp && (
                     <figure className="text-center">
                       <Image
-                        src={document.images.stamp}
+                        src={visibleDocument.images.stamp}
                         alt="Pečat"
                         width={112}
                         height={80}

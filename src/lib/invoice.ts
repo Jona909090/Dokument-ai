@@ -148,6 +148,7 @@ export type InvoiceData = {
   responsiblePerson: string;
   note: string;
   groups: InvoiceGroup[];
+  showFinancials: boolean;
   charges: InvoiceCharge[];
   globalDiscountRate: number;
   taxMode: InvoiceTaxMode;
@@ -403,6 +404,7 @@ export function createInvoiceData(): InvoiceData {
     responsiblePerson: "",
     note: "",
     groups: [createInvoiceGroup()],
+    showFinancials: true,
     charges: [],
     globalDiscountRate: 0,
     taxMode: "standard",
