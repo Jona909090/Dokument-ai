@@ -24,7 +24,7 @@ export async function updateSession(request: NextRequest) {
     },
   );
   const { data: { user } } = await supabase.auth.getUser();
-  const protectedPrefixes = ["/dashboard","/documents","/contacts","/companies","/projects","/settings","/profile","/subscription","/analytics"];
+  const protectedPrefixes = ["/dashboard","/documents","/contacts","/companies","/projects","/settings","/profile","/subscription","/billing","/analytics"];
   const protectedRoute = protectedPrefixes.some((prefix) => request.nextUrl.pathname === prefix || request.nextUrl.pathname.startsWith(`${prefix}/`));
   const authRoute = ["/login","/register","/reset-password"].includes(request.nextUrl.pathname);
   if (protectedRoute && !user) { const login = new URL("/login", request.url); login.searchParams.set("next", `${request.nextUrl.pathname}${request.nextUrl.search}`); login.searchParams.set("message", "Prijavite se za nastavak."); return NextResponse.redirect(login); }

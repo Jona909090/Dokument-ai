@@ -1,0 +1,12 @@
+import Link from "next/link";
+import type { ReactNode } from "react";
+import { LockKeyhole } from "lucide-react";
+import { checkEntitlement } from "@/lib/billing/entitlements";
+import { getPlan } from "@/lib/billing/plans";
+import type { EntitlementKey, PlanId } from "@/lib/billing/types";
+export function PlanBadge({ planId }: { planId: PlanId }) { return <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{getPlan(planId).name}</span>; }
+export function FeatureGate({ planId, entitlement, children, fallback }: { planId: PlanId; entitlement: EntitlementKey; children: ReactNode; fallback?: ReactNode }) { const result = checkEntitlement(planId, entitlement); return result.allowed ? children : fallback ?? <UpgradePrompt reason={result.reason ?? "Nadogradnja je potrebna."} requiredPlan={result.requiredPlan} />; }
+export function UpgradePrompt({ reason, requiredPlan }: { reason: string; requiredPlan?: PlanId }) { return <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/30"><LockKeyhole className="size-5 text-amber-700" /><p className="mt-2 text-sm font-medium">{reason}</p><Link href="/pricing" className="mt-3 inline-block text-sm font-semibold text-primary">Nadogradi na {requiredPlan ? getPlan(requiredPlan).name : "veći paket"} →</Link></div>; }
+export function UsageMeter({ label, current, limit }: { label: string; current: number; limit: number }) { const percentage = limit ? Math.min(100, Math.round(current / limit * 100)) : 100; return <div><div className="flex justify-between text-sm"><span>{label}</span><b>{current} / {limit}</b></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-muted"><div className={`h-full rounded-full ${percentage >= 100 ? "bg-red-500" : percentage >= 80 ? "bg-amber-500" : "bg-primary"}`} style={{ width: `${percentage}%` }} /></div></div>; }
+export function LimitReachedDialog({ current, limit, resource }: { current: number; limit: number; resource: string }) { return <div role="alert" className="rounded-3xl border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950/30"><h2 className="font-semibold">Dosegnut je limit</h2><p className="mt-2 text-sm">Iskoristili ste {current} od {limit} za {resource}. Vaš postojeći rad ostaje sačuvan.</p><div className="mt-4 flex gap-4 text-sm font-semibold"><Link href="/pricing" className="text-primary">Nadogradi paket</Link><Link href="/billing" className="text-muted-foreground">Pregledaj potrošnju</Link></div></div>; }
+

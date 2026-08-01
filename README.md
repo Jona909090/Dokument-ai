@@ -146,4 +146,56 @@ Nova vrsta dokumenta prvo se dodaje u postojeći dokumentni model i wizard, zati
 
 AI ne izmišlja cijene, porezne stope, identitete ni datume. Financijske, porezne, pravne i identifikacijske izmjene zahtijevaju ručnu potvrdu. U usage/audit tablice spremaju se samo sigurni metapodaci, bez prompta ili sadržaja dokumenta.
 
-Migracija `202608010002_ai_copilot.sql` priprema organizacijske AI postavke, zahtjeve, kredite i povijest odluka uz RLS izolaciju. Stripe nije dio ove faze.
+Migracija `202608010002_ai_copilot.sql` priprema organizacijske AI postavke, zahtjeve, kredite i povijest odluka uz RLS izolaciju. AI kreditni limiti sada se čitaju iz centralnog billing kataloga.
+
+## Stripe naplata i SaaS paketi
+
+Billing je centraliziran u `src/lib/billing`. UI nikada ne poziva Stripe izravno: Checkout, Customer Portal, otkazivanje i webhookovi prolaze kroz server route handlere i `BillingProvider`. Bez potpunih Stripe varijabli sustav automatski koristi jasno označen `MockBillingProvider`; demo tok ne stvara stvarne uplate.
+
+### Stripe test mode setup
+
+1. Kreirajte Stripe račun i uključite Test mode.
+2. Napravite Products/Prices za Basic, Pro i Business, zasebno za mjesečni i godišnji interval.
+3. Kopirajte `.env.example` u `.env.local` i unesite samo testne vrijednosti:
+
+```env
+STRIPE_SECRET_KEY=
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+STRIPE_WEBHOOK_SECRET=
+STRIPE_PRICE_BASIC_MONTHLY=
+STRIPE_PRICE_BASIC_YEARLY=
+STRIPE_PRICE_PRO_MONTHLY=
+STRIPE_PRICE_PRO_YEARLY=
+STRIPE_PRICE_BUSINESS_MONTHLY=
+STRIPE_PRICE_BUSINESS_YEARLY=
+BILLING_PROVIDER=stripe
+BILLING_ENABLED=true
+```
+
+`STRIPE_SECRET_KEY` i `STRIPE_WEBHOOK_SECRET` moraju ostati server-side i nikada ne smiju imati `NEXT_PUBLIC_` prefiks. Price ID uvijek bira server iz centralnog plana; browser ne šalje niti određuje cijenu.
+
+Webhook endpoint je `/api/billing/webhook`. Za lokalni test koristite Stripe CLI:
+
+```bash
+stripe login
+stripe listen --forward-to localhost:3000/api/billing/webhook
+```
+
+Dobiveni `whsec_...` unesite samo u lokalni `STRIPE_WEBHOOK_SECRET`. U Stripe Dashboardu konfigurirajte Customer Portal i za produkciju registrirajte Vercel webhook URL. Checkout redirect prikazuje samo status obrade; prava se dodjeljuju tek nakon verificiranog webhooka i sinkronizacije baze.
+
+### Paketi, trial, kuponi i sinkronizacija
+
+Centralni katalog definira Free, Basic, Pro i Business, mjesečne/godišnje cijene, entitlements, usage limite i AI kredite. Migracija `202608010003_billing_platform.sql` dodaje planove, cijene, pretplate, kupone, račune, plaćanja, usage događaje, obavijesti i idempotentne Stripe webhook zapise s RLS pravilima. Postojeće organizacije bez pretplate dobivaju Free projekciju, bez brisanja podataka.
+
+Stripe kuponi moraju imati povezani interni zapis prije produkcijske upotrebe. `DEMO20` postoji samo u mock provideru. Trial je 7 dana za Basic te 14 dana za Pro/Business, ali se u UI-u smatra aktivnim samo kada je potvrđen u bazi ili Stripeu.
+
+### Produkcijski checklist
+
+- primijeniti Supabase migracije i provjeriti RLS
+- unijeti Vercel server-side tajne i stvarne Price ID-eve
+- registrirati i testirati webhook signature
+- konfigurirati Customer Portal
+- uskladiti stvarne Stripe cijene s tablicom `plan_prices`
+- testirati Checkout, failed payment, grace period i otkazivanje u Stripe test modu
+- uključiti porezni sloj samo nakon zasebne Stripe Tax konfiguracije
+- provjeriti webhook reconciliation prije uključivanja live ključeva

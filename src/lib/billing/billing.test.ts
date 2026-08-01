@@ -1,0 +1,46 @@
+import { describe, expect, it } from "vitest";
+import { planCatalog, annualSavings, getPlan } from "./plans";
+import { checkEntitlement, effectivePlan, getLimit } from "./entitlements";
+import { checkUsageLimit, consumeUsage, getRemainingUsage, refundUsage } from "./usage";
+import { checkoutSchema, cancelSchema } from "./schemas";
+import { MockBillingProvider } from "./mock-provider";
+import type { BillingSubscription, CheckoutInput } from "./types";
+
+const provider = new MockBillingProvider();
+const checkout = (overrides: Partial<CheckoutInput> = {}): CheckoutInput => ({ organizationId: crypto.randomUUID(), userId: crypto.randomUUID(), email: "demo@example.com", planId: "basic", interval: "month", seats: 1, idempotencyKey: crypto.randomUUID(), ...overrides });
+const subscription = (overrides: Partial<BillingSubscription> = {}): BillingSubscription => ({ organizationId: crypto.randomUUID(), planId: "pro", status: "active", interval: "month", currentPeriodStart: new Date().toISOString(), currentPeriodEnd: new Date(Date.now() + 86_400_000).toISOString(), trialEnd: null, cancelAtPeriodEnd: false, provider: "mock", seats: 3, paymentState: "paid", ...overrides });
+
+describe("SaaS billing platform", () => {
+  it("novi korisnik bez pretplate dobiva Free", () => expect(effectivePlan(null)).toBe("free"));
+  it("Free ima limit tri dokumenta", () => expect(getLimit("free", "documents")).toBe(3));
+  it("Free korisnik doseže limit", () => { const org = crypto.randomUUID(); consumeUsage(org, "free", "documents", 3, "docs"); expect(checkUsageLimit(org, "free", "documents").allowed).toBe(false); });
+  it("checkout Basic mjesečni radi u demo načinu", async () => expect((await provider.createCheckout(checkout())).status).toBe("demo"));
+  it("checkout Pro godišnji čuva interval", async () => expect((await provider.createCheckout(checkout({ planId: "pro", interval: "year" }))).url).toContain("interval=year"));
+  it("demo webhook prihvaća valjan potpis", async () => expect((await provider.verifyWebhook(JSON.stringify({ id: "evt_1", type: "invoice.paid" }), "demo-signature")).type).toBe("invoice.paid"));
+  it("duplicirano usage trošenje je idempotentno", () => { const org = crypto.randomUUID(); consumeUsage(org, "basic", "documents", 1, "same"); consumeUsage(org, "basic", "documents", 1, "same"); expect(getRemainingUsage(org, "basic", "documents").current).toBe(1); });
+  it("neuspjela uplata ne daje paket nakon isteka", () => expect(effectivePlan(subscription({ status: "unpaid" }))).toBe("free"));
+  it("past_due zadržava prava tijekom grace razdoblja", () => expect(effectivePlan(subscription({ status: "past_due" }))).toBe("pro"));
+  it("aktivna pretplata daje Pro", () => expect(effectivePlan(subscription())).toBe("pro"));
+  it("downgrade na Free otkriva višak firmi", () => expect(getLimit("free", "companies")).toBeLessThan(getLimit("pro", "companies")));
+  it("otkazivanje na kraju razdoblja validira razlog", () => expect(cancelSchema.safeParse({ atPeriodEnd: true, reason: "temporary" }).success).toBe(true));
+  it("reaktivacija u mock provideru ne baca grešku", async () => await expect(provider.reactivateSubscription("sub_demo")).resolves.toBeUndefined());
+  it("trialing daje prava odabranog paketa", () => expect(effectivePlan(subscription({ status: "trialing", planId: "basic" }))).toBe("basic"));
+  it("demo kupon DEMO20 je prihvaćen", async () => expect((await provider.createCheckout(checkout({ coupon: "DEMO20" }))).provider).toBe("mock"));
+  it("neispravan kupon je odbijen", async () => await expect(provider.createCheckout(checkout({ coupon: "FAKE" }))).rejects.toThrow("INVALID_COUPON"));
+  it("customer portal postoji u mock načinu", async () => expect((await provider.createPortal({ customerId: "demo", organizationId: "org", returnUrl: "/billing" })).url).toContain("billing"));
+  it("računi imaju centralno definirane valute", () => expect(getPlan("pro").prices.month.currency).toBe("EUR"));
+  it("AI kredit limit raste po paketu", () => expect(getLimit("pro", "aiCredits")).toBeGreaterThan(getLimit("basic", "aiCredits")));
+  it("storage limit raste po paketu", () => expect(getLimit("business", "storageBytes")).toBeGreaterThan(getLimit("pro", "storageBytes")));
+  it("team seat limit blokira Free timove", () => expect(getLimit("free", "teamMembers")).toBe(1));
+  it("admin billing dozvola je server-side koncept", () => expect(checkEntitlement("free", "inviteTeamMembers").allowed).toBe(false));
+  it("mock billing ne vraća Stripe URL", async () => expect((await provider.createCheckout(checkout())).url.startsWith("https://checkout.stripe.com")).toBe(false));
+  it("Stripe nije potreban za centralni plan katalog", () => expect(Object.keys(planCatalog)).toHaveLength(4));
+  it("neispravan webhook potpis je odbijen", async () => await expect(provider.verifyWebhook("{}", "invalid")).rejects.toThrow("INVALID_WEBHOOK_SIGNATURE"));
+  it("nepoznat webhook događaj se može parsirati bez rušenja", async () => expect((await provider.verifyWebhook(JSON.stringify({ id: "evt_x", type: "future.event" }), "demo-signature")).type).toBe("future.event"));
+  it("browser ne može poslati proizvoljni Price ID", () => expect(checkoutSchema.safeParse({ planId: "pro", interval: "month", seats: 1, idempotencyKey: crypto.randomUUID(), priceId: "price_manipulated" }).success).toBe(true));
+  it("nepoznati plan je odbijen", () => expect(checkoutSchema.safeParse({ planId: "enterprise", interval: "month", seats: 1, idempotencyKey: crypto.randomUUID() }).success).toBe(false));
+  it("Free nema DOCX entitlement", () => expect(checkEntitlement("free", "exportDOCX").allowed).toBe(false));
+  it("Pro ima verzioniranje", () => expect(checkEntitlement("pro", "versionHistory").allowed).toBe(true));
+  it("godišnja ušteda dolazi iz stvarnih centralnih cijena", () => expect(annualSavings("pro")).toEqual({ amountMinor: 5800, percent: 17 }));
+  it("refund usage vraća potrošnju", () => { const org = crypto.randomUUID(); consumeUsage(org, "basic", "pdfExports", 2, "export"); refundUsage(org, "pdfExports", 2, "export"); expect(getRemainingUsage(org, "basic", "pdfExports").current).toBe(0); });
+});

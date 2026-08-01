@@ -1,0 +1,9 @@
+import { cancelSchema } from "@/lib/billing/schemas";
+import { requireBillingActor } from "@/lib/billing/actor";
+import { billingProvider } from "@/lib/billing/service";
+import { getBillingConfig } from "@/lib/billing/config";
+import { createClient } from "@/lib/supabase/server";
+async function subscriptionId(organizationId: string, demo: boolean) { if (demo || getBillingConfig().provider === "mock") return organizationId; const supabase = await createClient(); const { data } = await supabase.from("subscriptions").select("provider_subscription_id").eq("organization_id", organizationId).single(); if (!data?.provider_subscription_id) throw new Error("SUBSCRIPTION_MISSING"); return data.provider_subscription_id; }
+export async function DELETE(request: Request) { try { const actor = await requireBillingActor(); const input = cancelSchema.parse(await request.json()); const id = await subscriptionId(actor.organizationId, actor.demo); await billingProvider().cancelSubscription({ subscriptionId: id, atPeriodEnd: input.atPeriodEnd, reason: input.reason }); return Response.json({ success: true, demo: actor.demo || getBillingConfig().provider === "mock", message: input.atPeriodEnd ? "Otkazivanje je zakazano za kraj razdoblja." : "Pretplata je otkazana. Podaci nisu obrisani." }); } catch { return Response.json({ error: { message: "Pretplatu nije moguće otkazati." } }, { status: 400 }); } }
+export async function PATCH() { try { const actor = await requireBillingActor(); const id = await subscriptionId(actor.organizationId, actor.demo); await billingProvider().reactivateSubscription(id); return Response.json({ success: true, demo: actor.demo || getBillingConfig().provider === "mock" }); } catch { return Response.json({ error: { message: "Pretplatu nije moguće ponovno aktivirati." } }, { status: 400 }); } }
+

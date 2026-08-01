@@ -1,0 +1,8 @@
+"use client";
+import { useState } from "react";
+import { LoaderCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import type { BillingInterval, PlanId } from "@/lib/billing/types";
+export function CheckoutButton({ planId, interval, label }: { planId: Exclude<PlanId, "free">; interval: BillingInterval; label?: string }) { const [loading, setLoading] = useState(false); const [error, setError] = useState(""); async function checkout() { setLoading(true); setError(""); try { const response = await fetch("/api/billing/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ planId, interval, seats: 1, idempotencyKey: crypto.randomUUID() }) }); const data = await response.json(); if (!response.ok) throw new Error(data.error?.message || "Checkout nije dostupan."); window.location.assign(data.url); } catch (caught) { setError((caught as Error).message); } finally { setLoading(false); } } return <div><Button onClick={() => void checkout()} disabled={loading} className="w-full">{loading && <LoaderCircle className="size-4 animate-spin" />}{label ?? `Odaberi ${planId}`}</Button>{error && <p role="alert" className="mt-2 text-xs text-red-600">{error}</p>}</div>; }
+export function PortalButton() { const [loading, setLoading] = useState(false); async function open() { setLoading(true); const response = await fetch("/api/billing/portal", { method: "POST" }); const data = await response.json(); setLoading(false); if (response.ok) window.location.assign(data.url); } return <Button variant="outline" onClick={() => void open()} disabled={loading}>{loading && <LoaderCircle className="size-4 animate-spin" />} Upravljaj naplatom</Button>; }
+
