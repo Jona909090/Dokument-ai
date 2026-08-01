@@ -1,6 +1,7 @@
 import type { Content, TDocumentDefinitions } from "pdfmake/interfaces";
 
 import { formatDocumentDate, safeDocumentFilename, type GeneratedDocument } from "@/lib/generated-document";
+import { downloadPurchaseOrderDocx, downloadPurchaseOrderPdf } from "@/lib/purchase-order-export";
 
 const euro = new Intl.NumberFormat("hr-HR", { style: "currency", currency: "EUR" });
 
@@ -9,6 +10,7 @@ function displayValue(value: string, type: "date" | "multiline" | undefined, loc
 }
 
 export async function downloadPdf(document: GeneratedDocument) {
+  if (document.purchaseOrder) return downloadPurchaseOrderPdf(document);
   const [{ default: pdfMake }, { default: pdfFonts }] = await Promise.all([
     import("pdfmake/build/pdfmake"),
     import("pdfmake/build/vfs_fonts"),
@@ -109,6 +111,7 @@ function imageType(dataUrl: string): "jpg" | "png" {
 }
 
 export async function downloadDocx(documentData: GeneratedDocument) {
+  if (documentData.purchaseOrder) return downloadPurchaseOrderDocx(documentData);
   const docx = await import("docx");
   const { AlignmentType, BorderStyle, Document, Footer, Header, ImageRun, Packer, PageNumber, Paragraph, Table, TableCell, TableRow, TextRun, WidthType } = docx;
 

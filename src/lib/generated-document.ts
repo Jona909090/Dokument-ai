@@ -1,4 +1,5 @@
 import type { DocumentType } from "@/lib/document-types";
+import type { PurchaseOrderData } from "@/lib/purchase-order";
 
 export type DocumentLocale = "hr" | "en";
 
@@ -36,6 +37,7 @@ export type GeneratedDocument = {
   items?: GeneratedLineItem[];
   totals?: GeneratedTotals;
   images?: GeneratedImages;
+  purchaseOrder?: PurchaseOrderData;
 };
 
 export function formatDocumentDate(value: string, locale: DocumentLocale) {

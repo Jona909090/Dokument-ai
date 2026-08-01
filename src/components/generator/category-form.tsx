@@ -96,7 +96,7 @@ const fieldsByType: Record<Exclude<DocumentType, "invoice" | "offer">, FieldDefi
 };
 
 type CategoryFormProps = {
-  type: Exclude<DocumentType, "invoice" | "offer">;
+  type: Exclude<DocumentType, "invoice" | "offer" | "purchase-order">;
   locale: DocumentLocale;
   onPreview: (document: GeneratedDocument) => void;
   onLiveChange?: (document: GeneratedDocument) => void;

@@ -11,6 +11,7 @@ import { categoryForDocument, trackEvent } from "@/lib/analytics/service";
 import { useRepositories } from "@/lib/data/use-local-data";
 import { useLocalSession } from "@/components/session/local-session-provider";
 import type { SavedDocument } from "@/lib/data/models";
+import { PurchaseOrderSheet } from "@/components/generator/purchase-order-sheet";
 
 const euro = new Intl.NumberFormat("hr-HR", { style: "currency", currency: "EUR" });
 
@@ -63,7 +64,7 @@ export function DocumentPreview({ document, documentId, onClose, allowSave = tru
         </div>
         {saveMessage && <div className="mx-auto mb-4 max-w-[210mm] rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">{saveMessage}</div>}
 
-        <article className="mx-auto flex min-h-[297mm] w-full max-w-[210mm] flex-col bg-white px-[8%] py-10 text-slate-900 shadow-2xl sm:px-[18mm] sm:py-[16mm]">
+        {document.purchaseOrder ? <div className="mx-auto max-w-[210mm] shadow-2xl"><PurchaseOrderSheet data={document.purchaseOrder} images={document.images} /></div> : <article className="mx-auto flex min-h-[297mm] w-full max-w-[210mm] flex-col bg-white px-[8%] py-10 text-slate-900 shadow-2xl sm:px-[18mm] sm:py-[16mm]">
           <header className="flex min-h-14 items-start justify-between gap-6 border-b border-blue-100 pb-5">
             {document.images?.logo ? <Image src={document.images.logo} alt="Logotip firme" width={144} height={48} unoptimized className="max-h-12 max-w-36 object-contain" /> : <span className="text-sm font-bold tracking-wider text-blue-600">DOKUMENT AI</span>}
             <span className="text-right text-xs text-slate-400">{document.title}</span>
@@ -97,7 +98,7 @@ export function DocumentPreview({ document, documentId, onClose, allowSave = tru
           </div>
 
           <footer className="flex items-center justify-between border-t pt-4 text-[10px] text-slate-400"><span>Dokument AI</span><span>1</span></footer>
-        </article>
+        </article>}
       </div>
     </div>
   );
