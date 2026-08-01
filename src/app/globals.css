@@ -136,3 +136,127 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .document-design-surface[data-document-type="business-letter"] table { display:none; }
 @media print { .document-watermark{position:fixed}.document-design-surface article{box-shadow:none!important}.document-design-surface{print-color-adjust:exact;-webkit-print-color-adjust:exact}.document-design-surface[data-print-safe="true"]{filter:saturate(.7)}.document-design-surface[data-print-safe="true"] .paper-shape{opacity:.035!important} }
 .composer-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:var(--doc-space)}.composer-block{min-width:0}.composer-document h1{grid-column:1/-1;font-size:2.5em;font-weight:800}.composer-document h2{font-size:1.6em}.composer-field-value dt{font-family:var(--doc-small-font);font-size:.78em;font-weight:700;text-transform:uppercase;color:var(--doc-muted)}.composer-field-value dd{margin-top:.3em}.composer-card{background:var(--doc-surface);border-radius:10px}.composer-bordered{border:1px solid color-mix(in srgb,var(--doc-muted) 35%,transparent)}.composer-accent{border-left:4px solid var(--doc-accent);background:var(--doc-surface)}.composer-callout{border:1px solid color-mix(in srgb,var(--doc-accent) 30%,transparent);background:color-mix(in srgb,var(--doc-accent) 8%,var(--doc-paper))}.composer-note,.composer-warning,.composer-legal,.composer-terms{grid-column:1/-1}.composer-warning{border-left:4px solid #d97706;background:#fffbeb}.composer-legal{font-size:.9em;color:var(--doc-muted)}.composer-financial-summary{margin-left:auto;background:var(--doc-heading);color:#fff}.composer-financial-summary span{opacity:.75}.composer-signature{min-height:30mm}.composer-divider{grid-column:1/-1;border-color:var(--doc-muted)}@media(max-width:700px){.composer-grid{display:block}.composer-grid>.composer-block{margin-bottom:10px}}@media print{.composer-grid{display:grid!important}.composer-block{page-break-inside:auto}.composer-block[style*="break-inside: avoid"]{page-break-inside:avoid}}
+
+/* Landing page follows its content instead of reserving another viewport. */
+#top {
+  min-height: auto;
+}
+
+@media (min-width: 1024px) {
+  #top > .mx-auto {
+    gap: 10px;
+    padding-block: 8px;
+  }
+
+  #top > .mx-auto > main {
+    padding: 16px;
+  }
+
+  #top > .mx-auto > main h1 {
+    margin-top: 10px;
+    font-size: 2.7rem;
+  }
+
+  #top > .mx-auto > main textarea {
+    min-height: 74px;
+    padding-block: 10px;
+  }
+
+  #top > .mx-auto > aside {
+    padding: 10px;
+  }
+
+  #top > .mx-auto > aside nav {
+    margin-top: 8px;
+  }
+
+  #top > .mx-auto > aside nav button {
+    padding-block: 7px;
+  }
+
+  #top > .mx-auto > aside > div:first-child {
+    padding: 12px;
+  }
+
+  #top > .mx-auto > aside > div:first-child ul {
+    margin-top: 8px;
+    gap: 5px;
+  }
+
+  #top > .mx-auto > aside > div:first-child ul + div {
+    margin-top: 10px;
+  }
+
+  #top > .mx-auto > aside > div:last-child {
+    margin-top: 8px;
+  }
+
+  #top > .mx-auto > aside > div:last-child > div:last-child {
+    margin-top: 6px;
+    gap: 4px;
+  }
+
+  #top > .mx-auto > aside > div:last-child > div:last-child > div {
+    padding-block: 6px;
+  }
+
+  #kako-radi {
+    padding-block: 8px;
+  }
+
+  #kako-radi > div {
+    max-width: 1500px;
+  }
+
+  #kako-radi > div > div:first-child {
+    gap: 10px;
+  }
+
+  #kako-radi h2 {
+    margin-top: 4px;
+    font-size: 1rem;
+  }
+
+  #kako-radi article,
+  #kako-radi div.rounded-xl {
+    padding: 6px 10px;
+  }
+
+  #kako-radi > div > div:last-child {
+    margin-top: 5px;
+    padding-top: 5px;
+    font-size: 11px;
+  }
+
+  #dokumenti {
+    padding-block: 4px;
+  }
+
+  #dokumenti > div {
+    max-width: 1500px;
+  }
+
+  #dokumenti summary {
+    min-height: 56px;
+    padding-block: 8px;
+  }
+
+  #dokumenti summary > span:first-child {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+
+  #dokumenti summary b {
+    font-size: 14px;
+  }
+
+  #dokumenti summary b + span {
+    font-size: 11px;
+  }
+
+  body > footer > div {
+    gap: 12px;
+    padding-block: 8px;
+  }
+}
