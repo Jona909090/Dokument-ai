@@ -113,3 +113,37 @@ npm run build
 ## Tehnologije
 
 Next.js App Router, React, TypeScript, Tailwind CSS, shadcn/ui, Lucide Icons, pdfmake, docx, Vitest, ESLint i npm.
+
+## AI Document Copilot
+
+Copilot je centraliziran server-side sloj. UI poziva samo `/api/ai/generate`; OpenAI API ključ nikada nije dio browser bundlea. Bez ključa aplikacija automatski koristi jasno označen lokalni mock provider i build nastavlja raditi.
+
+### Konfiguracija
+
+Kreirajte API ključ u OpenAI Platform postavkama i spremite ga samo u lokalni `.env.local` ili Vercel server-side environment varijable:
+
+```env
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-5.6-terra
+OPENAI_FALLBACK_MODEL=gpt-5.6-luna
+AI_PROVIDER=openai
+AI_ENABLED=true
+AI_TIMEOUT_MS=45000
+```
+
+Za testiranje bez stvarne potrošnje koristite `AI_PROVIDER=mock` i ostavite ključ praznim. Za potpuno isključivanje koristite `AI_ENABLED=false`. Ključ nikada ne smije imati prefiks `NEXT_PUBLIC_`.
+
+### Arhitektura i sigurnost
+
+- `src/lib/ai/provider.ts` definira provider ugovor.
+- `mock-provider.ts` daje determinističku lokalnu klasifikaciju, ekstrakciju i simulacije grešaka.
+- `openai-provider.ts` koristi Responses API, Moderation API i strogi Structured Output.
+- `service.ts` centralizira timeout, idempotency, izbor providera, sigurnost i kredite.
+- `schemas.ts` je registry struktura koje smiju ući u aplikacijske modele.
+- `operations.ts` sadrži diff, selektivnu primjenu, Undo, validaciju i konverziju kopije.
+
+Nova vrsta dokumenta prvo se dodaje u postojeći dokumentni model i wizard, zatim u schema registry i mock klasifikaciju. Nova AI akcija dodaje se u `aiActions`, kreditni cjenik i provider implementacije. Strukturirani rezultat mora proći Zod/JSON Schema provjeru prije prikaza ili spremanja.
+
+AI ne izmišlja cijene, porezne stope, identitete ni datume. Financijske, porezne, pravne i identifikacijske izmjene zahtijevaju ručnu potvrdu. U usage/audit tablice spremaju se samo sigurni metapodaci, bez prompta ili sadržaja dokumenta.
+
+Migracija `202608010002_ai_copilot.sql` priprema organizacijske AI postavke, zahtjeve, kredite i povijest odluka uz RLS izolaciju. Stripe nije dio ove faze.

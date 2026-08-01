@@ -9,7 +9,6 @@ import { CtaSection } from "@/components/landing/cta-section";
 import { HeroSection } from "@/components/landing/hero-section";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { PopularDocuments } from "@/components/landing/popular-documents";
-import { detectDocumentType } from "@/lib/document-types";
 
 export function LandingPage() {
   const router = useRouter();
@@ -33,13 +32,12 @@ export function LandingPage() {
   }
 
   function startGenerator() {
-    const type = detectDocumentType(request);
-    if (!type) {
+    if (request.trim().length < 3) {
       showMessage("Nismo prepoznali vrstu dokumenta. Pokušajte navesti CV, fakturu, ponudu, ugovor, zahtjev, otkaz, narudžbenicu, zapisnik, potvrdu ili poslovno pismo.");
       return;
     }
     setLoading(true);
-    router.push(`/wizard?type=${type}&prompt=${encodeURIComponent(request.trim())}`);
+    router.push(`/copilot?prompt=${encodeURIComponent(request.trim())}`);
   }
 
   return (
