@@ -1,5 +1,6 @@
 import PdfExtraTools from "@/components/document-tools/PdfExtraTools";
 import NewPublicTools from "@/components/document-tools/NewPublicTools";
+import PdfVisualEditor from "@/components/document-tools/PdfVisualEditor";
 
 export default function ToolsLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,6 +12,7 @@ export default function ToolsLayout({ children }: { children: React.ReactNode })
       <div className="w-full [&>section]:!w-full [&>section]:!max-w-none [&>section]:px-4 sm:[&>section]:px-8 [&_section]:!w-full">
         <NewPublicTools />
       </div>
+      <PdfVisualEditor />
     </>
   );
 }
