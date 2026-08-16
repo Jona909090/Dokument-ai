@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, Bell, Building2, CircleHelp, ContactRound, FilePlus2, Files, FileText, FolderKanban, Info, LayoutDashboard, Menu, Search, Settings, Star, UserRound, X } from "lucide-react";
+import { BarChart3, Bell, Building2, CircleHelp, ContactRound, FilePlus2, Files, FileText, FolderKanban, Info, LayoutDashboard, Menu, Search, Settings, Star, UserRound, Wrench, X } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,7 @@ const links = [
   { href: "/projects", label: "Projekti i gradilišta", icon: FolderKanban },
   { href: "/company", label: "Podaci firme", icon: Building2 },
   { href: "/contacts", label: "Kontakti", icon: ContactRound },
+  { href: "/tools", label: "Alati za dokumente", icon: Wrench },
   { href: "/dashboard?view=favorites", label: "Omiljeni", icon: Star },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/dashboard/settings", label: "Postavke", icon: Settings },
